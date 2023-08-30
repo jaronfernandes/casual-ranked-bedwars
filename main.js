@@ -8,20 +8,34 @@
 */
 
 
-const Discord = require('discord.js');
+// const Discord = require('discord.js');
+// import pkg from 'discord.js';
+// const { Intents } = pkg
+// import DiscordJS from 'discord.js'
+require('dotenv').config();
 
-const client = new Discord.Client();
+const Discord = require('discord.js')
+const { Client, GatewayIntentBits, Partials } = require('discord.js');
+const client = new Client({
+  intents: [
+    GatewayIntentBits.DirectMessages,
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+  ],
+  partials: [Partials.Channel],
+});
 
 const prefix = '>';
 
 /*
     Dear Programmer:
     When I wrote this code, only God and I knew how it worked. (2021)
-    Now, only God knows it! So I may have modified something (2023) and broke it.
+    Now, only God knows it since a bunch of Discord.js updates happened since then and possibly broke things!
 
     For this code specifically, you need to change the id of "elo_id_replacement" below to the 
     id of a message THE BOT SENDS (preferably in a HEAVILY RESTRICTED RIVATE channel)
-    See line 843 to modify how new users get added to the message database.
+    See line 878 to modify how new users get added to the message database.
 */
 
 const elo_id_replacement = "795693829360975913"
@@ -374,6 +388,23 @@ client.once('ready', () => {
 });
 
 client.on('ready', () => {
+    const guildId = '795112158421581827'
+    const guild = client.guilds.cache.get(guildId)
+    let commands
+ 
+    if (guild) {
+        console.log('AA')
+        commands = guild.commands
+    }
+    else {
+        console.log('BB')
+        commands = client.application?.commands
+    }
+
+    commands?.create({
+        name: 'test',
+        description: 'test command'
+    })
     //console.log(eloChannel.name);
     eloChannel = client.channels.cache.get("795693567744933971");
     //eloMessage = eloChannel.fetch("795693829360975913");
@@ -393,11 +424,15 @@ client.on('ready', () => {
     //working edit message eloMessage = eloChannel.messages.fetch("795693829360975913").then(message => message.edit("hello")).catch(console.error);
 });
 
-client.on('message', message => {
-    if(!message.content.startsWith(prefix) || message.author.bot) return;
+client.on('messageCreate', message => {
+    console.log('whataaa')
 
+    if((!message.content.startsWith(prefix)) || message.author.bot) return;
+    
     const args = message.content.slice(prefix.length).split(/ +/);
     const command = args.shift().toLowerCase();
+
+    console.log('what')
 
     if(command === 'play' && rankedSequence == 0)
     {
@@ -891,16 +926,25 @@ client.on('message', message => {
                 //console.log("this is the elo message: "+(await eloMessage)); //PUT THIS IN BRACKETS CAUSE TOO MUCH PRINT STUFF
                 if (eloMessage.indexOf(message.author.toString()) == -1)
                 {
-                    var embeddedMessage = new Discord.MessageEmbed()
+                    var embeddedMessage = new Discord.EmbedBuilder()
                     .setTitle(message.author.username+"'s stats")
                     .setColor(3457003)
                     .setImage(message.author.avatarURL())
-                    .addField("ELO: ", "0", true)
-                    .addField("Wins: ", "0", true)
-                    .addField("Losses: ", "0", true)
-                    .addField("Win/Loss Ratio: ", "0", true)
-                    .addField("Games: ", "0", true)
-                    .addField("Winstreak: ", "0", true)
+                    .addFields(
+                        {name: "ELO: ", value: "0", inline: true},
+                        {name: "Wins: ", value: "0", inline: true},
+                        {name: "Losses: ", value: "0", inline: true},
+                        {name: "Win/Loss Ratio: ", value: "0", inline: true},
+                        {name: "Games: ", value: "0", inline: true},
+                        {name: "Winstreak: ", value: "0", inline: true},
+                    )
+                    // .addField("ELO: ", "0", true)
+                    // .addField("Wins: ", "0", true)
+                    // .addField("Losses: ", "0", true)
+                    // .addField("Win/Loss Ratio: ", "0", true)
+                    // .addField("Games: ", "0", true)
+                    // .addField("Winstreak: ", "0", true)
+                    // Above doesn't work anymore
                     message.channel.send(embeddedMessage);
                 } //checks to see if people have stats in the first place
                 else
@@ -913,16 +957,25 @@ client.on('message', message => {
                     var winstreakOfPersonThing = parseInt(eloMessage.substring(eloMessage.indexOf("-", indexOfPersonThing)+1, eloMessage.indexOf("]", indexOfPersonThing)));
                     var wlr = (winsOfPersonThing/lossesOfPersonThing).toFixed(2);
 
-                    var embeddedMessage = new Discord.MessageEmbed()
+                    var embeddedMessage = new Discord.EmbedBuilder()
                     .setTitle(message.author.username+"'s stats")
                     .setColor(3457003)
                     .setImage(message.author.avatarURL())
-                    .addField("ELO: ", eloOfPersonThing, true)
-                    .addField("Wins: ", winsOfPersonThing, true)
-                    .addField("Losses: ", lossesOfPersonThing, true)
-                    .addField("Win/Loss Ratio: ", wlr, true)
-                    .addField("Games: ", gamesOfPersonThing, true)
-                    .addField("Winstreak: ", winstreakOfPersonThing, true)
+                    .addFields(
+                        {name: "ELO: ", value: eloOfPersonThing, inline: true},
+                        {name: "Wins: ", value: winsOfPersonThing, inline: true},
+                        {name: "Losses: ", value: lossesOfPersonThing, inline: true},
+                        {name: "Win/Loss Ratio: ", value: wlr, inline: true},
+                        {name: "Games: ", value: gamesOfPersonThing, inline: true},
+                        {name: "Winstreak: ", value: winstreakOfPersonThing, inline: true},
+                    )
+                    // .addField("ELO: ", eloOfPersonThing, true)
+                    // .addField("Wins: ", winsOfPersonThing, true)
+                    // .addField("Losses: ", lossesOfPersonThing, true)
+                    // .addField("Win/Loss Ratio: ", wlr, true)
+                    // .addField("Games: ", gamesOfPersonThing, true)
+                    // .addField("Winstreak: ", winstreakOfPersonThing, true)
+                    // Above doesn't work anymore
 
                     message.channel.send(embeddedMessage);
                 } //the rest who already do have stats in the database
@@ -936,16 +989,25 @@ client.on('message', message => {
                 //console.log("this is the elo message: "+(await eloMessage)); //PUT THIS IN BRACKETS CAUSE TOO MUCH PRINT STUFF
                 if (eloMessage.indexOf("<@"+message.mentions.members.first().id+">") == -1)
                 {
-                    var embeddedMessage = new Discord.MessageEmbed()
+                    var embeddedMessage = new Discord.EmbedBuilder()
                     .setTitle(message.mentions.members.first().user.username+"'s stats")
                     .setColor(3457003)
                     .setImage(message.mentions.members.first().user.avatarURL())
-                    .addField("ELO: ", "0", true)
-                    .addField("Wins: ", "0", true)
-                    .addField("Losses: ", "0", true)
-                    .addField("Win/Loss Ratio: ", "0", true)
-                    .addField("Games: ", "0", true)
-                    .addField("Winstreak: ", "0", true)
+                    .addFields(
+                        {name: "ELO: ", value: "0", inline: true},
+                        {name: "Wins: ", value: "0", inline: true},
+                        {name: "Losses: ", value: "0", inline: true},
+                        {name: "Win/Loss Ratio: ", value: "0", inline: true},
+                        {name: "Games: ", value: "0", inline: true},
+                        {name: "Winstreak: ", value: "0", inline: true},
+                    )
+                    // .addField("ELO: ", "0", true)
+                    // .addField("Wins: ", "0", true)
+                    // .addField("Losses: ", "0", true)
+                    // .addField("Win/Loss Ratio: ", "0", true)
+                    // .addField("Games: ", "0", true)
+                    // .addField("Winstreak: ", "0", true)
+                    // Above doesn't work anymore
                     message.channel.send(embeddedMessage);
                 } //checks to see if people have stats in the first place
                 else
@@ -963,16 +1025,25 @@ client.on('message', message => {
                         wlr = winsOfPersonThing;
                     }
                     */ //infinity check
-                    var embeddedMessage = new Discord.MessageEmbed()
+                    var embeddedMessage = new Discord.EmbedBuilder()
                     .setTitle(message.mentions.members.first().user.username+"'s stats")
                     .setColor(3457003)
                     .setImage(message.mentions.members.first().user.avatarURL())
-                    .addField("ELO: ", eloOfPersonThing, true)
-                    .addField("Wins: ", winsOfPersonThing, true)
-                    .addField("Losses: ", lossesOfPersonThing, true)
-                    .addField("Win/Loss Ratio: ", wlr, true)
-                    .addField("Games: ", gamesOfPersonThing, true)
-                    .addField("Winstreak: ", winstreakOfPersonThing, true)
+                    .addFields(
+                        {name: "ELO: ", value: eloOfPersonThing, inline: true},
+                        {name: "Wins: ", value: winsOfPersonThing, inline: true},
+                        {name: "Losses: ", value: lossesOfPersonThing, inline: true},
+                        {name: "Win/Loss Ratio: ", value: wlr, inline: true},
+                        {name: "Games: ", value: gamesOfPersonThing, inline: true},
+                        {name: "Winstreak: ", value: winstreakOfPersonThing, inline: true},
+                    )
+                    // .addField("ELO: ", eloOfPersonThing, true)
+                    // .addField("Wins: ", winsOfPersonThing, true)
+                    // .addField("Losses: ", lossesOfPersonThing, true)
+                    // .addField("Win/Loss Ratio: ", wlr, true)
+                    // .addField("Games: ", gamesOfPersonThing, true)
+                    // .addField("Winstreak: ", winstreakOfPersonThing, true)
+                    // Above doesn't work anymore
     
                     message.channel.send(embeddedMessage);
                 } //the rest who already do have stats in the database
@@ -1326,4 +1397,14 @@ client.on('message', message => {
 }
 );
 
-client.login('NOT TODAY BUDDY!');
+client.on('interactionCreate', (interaction) => {
+    if (!interaction.isChatInputCommand()) return;
+
+    // const { commandName, options } = interaction
+
+    if (interaction.commandName === 'test') {
+        interaction.reply('WHY DID DISCORD.JS BREAK EVERYTHING OF MINE!!!')
+    }
+})
+
+client.login(process.env.TOKEN);
