@@ -10,6 +10,9 @@ See LICENSE for more details.
 
 import discord, os, json
 from discord.ext import commands
+from discord import ui   # For buttons
+import interactions
+from interactions import Button, ButtonStyle
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -86,6 +89,7 @@ class Match:
 ## GLOBAL VARIABLES
 
 games_running = {}
+players_in_game = {}
 
 ## FUNCTIONS
 
@@ -161,6 +165,12 @@ def get_player_data_from_json_file(player, current_guild_id: int) -> dict:
 
             print(f"Created new data for player {player_name}")
             return data["SERVERS"][str(current_guild_id)]["user_data"][player_id]
+        
+## UI CLASSES
+
+class CreateMatch(discord.ui.View):
+    async def on_button_click(self, button: discord.ui.Button, interaction: discord.Interaction):
+        await interaction.response.send_message('You pressed a button!', ephemeral=True)
 
 ## EVENTS
 
@@ -170,8 +180,51 @@ async def first_command(interaction):
 
 @bot.tree.command(name = "add", description = "Add (or retrieve) a user from data file.")
 async def retrieve_data(interaction):
-    data = get_player_data_from_json_file(interaction.author, interaction.guild.id)
+    data = get_player_data_from_json_file(interaction.user, interaction.guild.id)
     await interaction.response.send_message(data)
+
+@bot.tree.command(name = "play", description = "Start a new game")
+async def retrieve_data(interaction):
+    interaction.channel.send("Enter the amount of players you'd like to play with with (2,4,6,8).");
+        
+    button =[
+            interactions.ActionRow(
+                components=[
+                    discord.Embed(
+                        title=message.author.name+" is creating a match.", 
+                        description="Enter the amount of players you'd like to play with with (2,4,6,8).", 
+                        color=0x00ff00
+                        ),
+                    interactions.Button(
+                        style=interactions.ButtonStyle.PRIMARY,
+                        label="2",
+                        custom_id="2_34234",
+                    ),
+                    interactions.Button(
+                        style=interactions.ButtonStyle.PRIMARY,
+                        label="4",
+                        custom_id="4_34234",
+                    ),
+                    interactions.Button(
+                        style=interactions.ButtonStyle.PRIMARY,
+                        label="6",
+                        custom_id="6_34234",
+                    ),
+                    interactions.Button(
+                        style=interactions.ButtonStyle.PRIMARY,
+                        label="8",
+                        custom_id="8_34234",
+                    ),
+                    interactions.Button(
+                        style=interactions.ButtonStyle.DANGER,
+                        label="Cancel Match",
+                        custom_id="cancel_match",
+                    )
+                ]
+            )
+        ]
+
+    await interaction.response.send_message(embed=button, components=button)
 
 @bot.event
 async def on_ready():
@@ -191,11 +244,72 @@ async def on_message(message):
         get_player_data_from_json_file(message.author, message.guild.id)
         await message.channel.send('Added player '+message.author.name+" to the data file!")    
     if message.content.startswith('!play'):
-        print(message.author, message.author.id, message.author.name)
-        await message.channel.send('Hello!')
+        await message.channel.send("Enter the amount of players you'd like to play with with (2,4,6,8).");
+    
+        # discord.Embed()
+        # button =[
+        #     interactions.ActionRow(
+        #         components=[
+        #             discord.Embed(
+        #                 title=message.author.name+" is creating a match.", 
+        #                 description="Enter the amount of players you'd like to play with with (2,4,6,8).", 
+        #                 color=0x00ff00
+        #                 ),
+        #             interactions.Button(
+        #                 style=interactions.ButtonStyle.PRIMARY,
+        #                 label="2",
+        #                 custom_id="2_34234",
+        #             ),
+        #             interactions.Button(
+        #                 style=interactions.ButtonStyle.PRIMARY,
+        #                 label="4",
+        #                 custom_id="4_34234",
+        #             ),
+        #             interactions.Button(
+        #                 style=interactions.ButtonStyle.PRIMARY,
+        #                 label="6",
+        #                 custom_id="6_34234",
+        #             ),
+        #             interactions.Button(
+        #                 style=interactions.ButtonStyle.PRIMARY,
+        #                 label="8",
+        #                 custom_id="8_34234",
+        #             ),
+        #             interactions.Button(
+        #                 style=interactions.ButtonStyle.DANGER,
+        #                 label="Cancel Match",
+        #                 custom_id="cancel_match",
+        #             )
+        #         ]
+        #     )
+        # ]
+        
+        # button = Button(
+        #         style=ButtonStyle.PRIMARY,
+        #         custom_id="test",
+        #         label="A Blue Button",
+        # )
+        # embedVar = discord.Embed(title="Title", description="Desc", color=0x00ff00)
+        # embedVar.add_field(name="Field1", value="hi", inline=False)
+        # embedVar.add_field(name="Field2", value="hi2", inline=False)
+
+        viewe = CreateMatch()
+        button2 = discord.ui.Button(label="2", style=discord.ButtonStyle.primary, custom_id="2_button")
+        button4 = discord.ui.Button(label="4", style=discord.ButtonStyle.primary, custom_id="4_button")
+        button6 = discord.ui.Button(label="6", style=discord.ButtonStyle.primary, custom_id="6_button")
+        button8 = discord.ui.Button(label="8", style=discord.ButtonStyle.primary, custom_id="8_button")
+        button_cancel = discord.ui.Button(label="Cancel Match", style=discord.ButtonStyle.danger, custom_id="cancel_button")
+        viewe.add_item(button2)
+        viewe.add_item(button4)
+        viewe.add_item(button6)
+        viewe.add_item(button8)
+        viewe.add_item(button_cancel)
+
+        await message.channel.send(view=viewe)
 
     if message.content.startswith('oof'):
         await message.channel.send('Bye!')
+
 
 @bot.event
 async def end():
