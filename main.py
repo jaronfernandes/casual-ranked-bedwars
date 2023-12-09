@@ -1,3 +1,13 @@
+"""
+Written by: Jaron Fernandes   Last updated: 2023-12-9
+Github: jaronfernandes
+Repository: https://github.com/jaronfernandes/casual-ranked-bedwars
+
+Copyright (c) 2023, jaronfernandes
+See LICENSE for more details.
+"""
+
+
 import discord, os, json
 from discord.ext import commands
 from dotenv import load_dotenv
