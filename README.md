@@ -6,6 +6,7 @@ github = "https://github.com/jaronfernandes"
 # **IMPORTANT NOTE:** 
 
 This bot is currently being revamped! It will come with many new features on top of the existing ones: 
+- Slash Commands (these didn't exist when I created the bot)
 - Enhanced Data Storage (so you'll save braincells by not viewing my code)
 - Custom Match Settings for Individual Servers (different tastes, different games!)
 - User Statistics (settling the GOAT debate of casual ranked bedwars)
