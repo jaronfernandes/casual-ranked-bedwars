@@ -322,11 +322,29 @@ def create_match(player, playerscurrent_guild_id: int, is_big_team_map: bool = F
 ## UI CLASSES
     
 class RandomizeCaptains(discord.ui.View):
-    @button(label='Random Captains', style=discord.ButtonStyle.primary, custom_id="randomize_button")
+    match: Match
+
+    def __init__ (self, match: Match) -> None:
+        super().__init__()
+        self.match = match
+
+    @button(label='Random', style=discord.ButtonStyle.primary, custom_id="randomize_button")
     async def randomize_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.clear_items()
-        match = create_match(interaction.user, interaction.guild.id, False, True)
-        new_view = JoinGame(match, interaction.user)
+        new_view = JoinGame(self.match, interaction.user)
+        embedy = new_view.get_embed()
+        filey = new_view.get_file()
+        await interaction.response.send_message(
+            interaction.user.name+' is now hosting a match!', 
+            ephemeral=False, 
+            file=filey,
+            embed=embedy,
+            view=new_view)
+
+    @button(label='Highest ELO', style=discord.ButtonStyle.primary, custom_id="randomize_button")
+    async def non_randomize_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.clear_items()
+        new_view = JoinGame(self.match, interaction.user)
         embedy = new_view.get_embed()
         filey = new_view.get_file()
         await interaction.response.send_message(
@@ -343,11 +361,17 @@ class RandomizeCaptains(discord.ui.View):
         await interaction.response.send_message(content='You canceled the match!', view=self)
     
 class RandomizeTeams(discord.ui.View):
-    @button(label='Random Teams', style=discord.ButtonStyle.primary, custom_id="randomize_button")
+    match: Match
+
+    def __init__ (self, match: Match) -> None:
+        super().__init__()
+        self.match = match
+    
+    @button(label='Random', style=discord.ButtonStyle.primary, custom_id="randomize_button")
     async def randomize_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.clear_items()
-        match = create_match(interaction.user, interaction.guild.id, True, True)
-        new_view = JoinGame(match, interaction.user)
+
+        new_view = JoinGame(self.match, interaction.user)
         embedy = new_view.get_embed()
         filey = new_view.get_file()
         await interaction.response.send_message(
@@ -356,6 +380,12 @@ class RandomizeTeams(discord.ui.View):
             file=filey,
             embed=embedy,
             view=new_view)
+                
+    @button(label='Custom', style=discord.ButtonStyle.primary, custom_id="non_randomize_button")
+    async def non_randomize_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.clear_items()
+        new_view = RandomizeCaptains(self.match)
+        await interaction.response.edit_message(content='Do you want to randomize team captains?', view=new_view)
 
     @button(label='Cancel Match', style=discord.ButtonStyle.danger, custom_id="cancel_button")
     async def button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -368,29 +398,15 @@ class RandomizeMap(discord.ui.View):
     async def randomize_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.clear_items()
         match = create_match(interaction.user, interaction.guild.id, False, True)
-        new_view = JoinGame(match, interaction.user)
-        embedy = new_view.get_embed()
-        filey = new_view.get_file()
-        await interaction.response.send_message(
-            interaction.user.name+' is now hosting a match!', 
-            ephemeral=False, 
-            file=filey,
-            embed=embedy,
-            view=new_view)
+        new_view = RandomizeTeams(match)
+        await interaction.response.edit_message(content='Do you want to randomize teams?', view=new_view)
 
-    @button(label='Not Random', style=discord.ButtonStyle.primary, custom_id="non_randomize_button")
+    @button(label='Custom', style=discord.ButtonStyle.primary, custom_id="non_randomize_button")
     async def non_randomize_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.clear_items()
         match = create_match(interaction.user, interaction.guild.id, False, False)
-        new_view = JoinGame(match, interaction.user)
-        embedy = new_view.get_embed()
-        filey = new_view.get_file()
-        await interaction.response.send_message(
-            interaction.user.name+' is now hosting a match!', 
-            ephemeral=False, 
-            file=filey,
-            embed=embedy,
-            view=new_view)
+        new_view = RandomizeTeams(match)
+        await interaction.response.edit_message(content='Do you want to randomize teams?', view=new_view)
 
     @button(label='Cancel Match', style=discord.ButtonStyle.danger, custom_id="cancel_button")
     async def button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
