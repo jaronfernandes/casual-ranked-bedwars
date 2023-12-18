@@ -390,6 +390,9 @@ def get_season_embed(current_guild: discord.Guild) -> discord.Embed:
         if str(current_guild_id) not in data["SERVERS"]:
             setup_guild_in_json_file(current_guild_id)
             print(f"Created new server {current_guild_id} in data file.")
+            with open("data", "r") as file:
+                string = file.read()
+                data = json.loads(string)
 
         current_season = data["SERVERS"][str(current_guild_id)]["current_season"]
         season = current_season["season"]
@@ -492,6 +495,31 @@ def create_help_embed(ctx):
         print(e)
         print("Error getting guild image embed.")
     return help_embed
+
+
+def create_maps_embed(ctx):
+    maps_embed = discord.Embed(
+        title="Maps",
+        description="Maps currently in Casual Ranked Bedwars rotation",
+        # colour turqoise
+        color=0x40e0d0
+    )
+
+    with open("maps", "r") as file:
+        # csv file
+        string = file.read()
+        maps = string.split("\n")
+        maps_embed.add_field(name="Maps", value=str(",\n".join(maps)), inline=False)
+
+    try:
+        maps_embed.set_thumbnail(url=ctx.guild.icon)
+    except Exception as e:
+        print(e)
+        print("Error getting guild image embed.")
+    return maps_embed
+
+
+## END OF FUNCTIONS
 
 
 ## UI CLASSES
@@ -873,6 +901,9 @@ class JoinGame(discord.ui.View):
             await interaction.response.send_message(content=interaction.user.name+' cancelled the match!', view=self)
 
 
+## END OF UI CLASSES
+
+
 ## SLASH COMMANDS
 
 
@@ -908,7 +939,7 @@ async def queue(interaction: discord.interactions.Interaction):
 
 @bot.tree.command(name = "season", description = "View the current season")
 async def season(interaction: discord.interactions.Interaction):
-    await interaction.response.send_message(content="The current season is season 1.", embed=get_season_embed(interaction.guild.id), ephemeral=True)
+    await interaction.response.send_message(content="The current season is season 1.", embed=get_season_embed(interaction.guild), ephemeral=True)
 
 
 @bot.tree.command(name = "help", description = "View the help menu")
@@ -923,6 +954,21 @@ async def rules(interaction: discord.interactions.Interaction):
     rules_embed = create_rules_embed(interaction)
 
     await interaction.response.send_message(embed=rules_embed, ephemeral=True)
+
+
+@bot.tree.command(name = "stats", description = "Get your current season statistics")
+async def stats(interaction: discord.interactions.Interaction):
+    pass
+
+
+@bot.tree.command(name = "maps", description = "View the maps currently in rotation")
+async def maps(interaction: discord.interactions.Interaction):
+    maps_embed = create_maps_embed(interaction)
+
+    await interaction.response.send_message(embed=maps_embed, ephemeral=True)
+
+
+## END OF SLASH COMMANDS
 
 
 ## EVENTS
@@ -960,11 +1006,6 @@ async def queue(ctx: commands.Context):
     pass
 
 
-@bot.command(name = "stats", description = "Get your current season statistics")
-async def stats(ctx: commands.Context):
-    pass
-
-
 @bot.command(name = "season", description = "View the current season")
 async def season(ctx: commands.Context):
     await ctx.send(embed=get_season_embed(ctx.guild))
@@ -982,6 +1023,19 @@ async def rules(ctx: commands.Context):
     rules_embed = create_rules_embed(ctx)
 
     await ctx.send(embed=rules_embed)
+
+
+
+@bot.command(name = "stats", description = "Get your current season statistics")
+async def stats(ctx: commands.Context):
+    pass
+
+
+@bot.command(name = "maps", description = "View the maps currently in rotation")
+async def maps(ctx: commands.Context):
+    maps_embed = create_maps_embed(ctx)
+
+    await ctx.send(embed=maps_embed)
 
 
 @bot.event
