@@ -368,7 +368,6 @@ class RandomizeCaptains(discord.ui.View):
         new_view = JoinGame(self.match, interaction.user)
         embedy = new_view.get_embed()
         filey = new_view.get_file()
-        interaction.delete_original_response()
 
         await interaction.response.send_message(
             interaction.user.name+' is now hosting a match!', 
@@ -700,11 +699,15 @@ async def retrieve_data(interaction):
     await interaction.response.send_message(data)
 
 @bot.tree.command(name = "play", description = "Start a new game")
-async def retrieve_data(interaction):
+async def retrieve_data(interaction: discord.interactions.Interaction):
     # interaction.channel.send("Enter the amount of players you'd like to play with with (2,4,6,8).")
 
-    viewe = CreateMatch()
-    await interaction.channel.send_message("Enter the amount of players you'd like to play with with (2,4,6,8).", view=viewe)
+    if valid_for_matchmaking(interaction.user.name):
+        players_in_game[interaction.user.name] = True
+        viewe = CreateMatch(interaction.user)
+        await interaction.response.send_message(content="Enter the amount of players you'd like to play with with (2,4,6,8).", view=viewe, ephemeral=True)
+    else:
+        await interaction.channel.send('You\'re already in a game!')
 
 @bot.event
 async def on_ready():
