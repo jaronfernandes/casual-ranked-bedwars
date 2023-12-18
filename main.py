@@ -438,7 +438,7 @@ def get_season_embed(current_guild: discord.Guild) -> discord.Embed:
 
         embed.add_field(name="Top Players", value=top_players_str, inline=False)
 
-        embed.add_field(name="Banned Items", value=str(",\n".join(banned_items)), inline=True)
+        embed.add_field(name="Banned Items", value=str("\n".join(banned_items)), inline=True)
 
         season_stats_str = \
             "Total Matches: " + str(current_season["total_games_played"]) + "\n"
@@ -523,7 +523,7 @@ def create_maps_embed(ctx):
         # csv file
         string = file.read()
         maps = string.split("\n")
-        maps_embed.add_field(name="Maps", value=str(",\n".join(maps)), inline=False)
+        maps_embed.add_field(name="Maps", value=str("\n".join(maps)), inline=False)
 
     try:
         maps_embed.set_thumbnail(url=ctx.guild.icon)
@@ -537,19 +537,24 @@ def create_stats_embed(ctx):
     """Return an embed for the stats menu."""
     current_guild_id = ctx.guild.id
 
-    user_data = get_player_data_from_json_file(ctx.author, current_guild_id)
+    if type(ctx) == discord.interactions.Interaction:
+        author = ctx.user
+    else:
+        author = ctx.author
+
+    user_data = get_player_data_from_json_file(author, current_guild_id)
 
     with open('data', 'r') as file:
         string = file.read()
         data = json.loads(string)
 
     user_data = data["SERVERS"][str(ctx.guild.id)]["user_data"]
-    user_id = str(ctx.author.id)
+    user_id = str(author.id)
 
     user_stats = user_data[user_id]
 
     stats_embed = discord.Embed(
-        title=f"{ctx.author.name}'s Overall Stats" ,
+        title=f"{author.name}'s Overall Stats" ,
         # colour orange
         color=0xffa500
     )
@@ -567,7 +572,7 @@ def create_stats_embed(ctx):
     stats_embed.add_field(value=stats_row_two, name="", inline=False)
 
     try:
-        stats_embed.set_thumbnail(url=ctx.author.avatar)
+        stats_embed.set_thumbnail(url=author.avatar)
     except Exception as e:
         print(e)
         print("Error getting user image embed.")
