@@ -1,0 +1,54 @@
+{
+    "warning_msg": "DO NOT MODIFY THIS FILE; THESE ARE HANDLED BY THE BOT",
+    "SERVERS": {
+        "server_id": {
+            "admin_roles_id": 123456789,
+            "scorer_roles_ids": 123456789,
+            "CONCURRENT_MATCH_LIMIT": 0,
+            "COUNT_TOP_KILLS": true,
+            "current_season": {
+                "season": 1,
+                "total_games_played": 0,
+                "start_date": "01/01/1970",
+                "end_date": "01/01/1970",
+                "banned_items": [
+                    "Knockback Stick",
+                    "Pop-up Towers",
+                    "Obsidian",
+                    "Punch Bows"
+                ]
+            },
+            "games_played": 0,
+            "user_data": {
+                "test_user_ID": {
+                    "Name": "",
+                    "Wins": 0,
+                    "Losses": 0,
+                    "Winstreak": 0,
+                    "ELO": 0
+                }
+            },
+            "server_channels": {
+                "test_channel_ID": {
+                    "Name": "",
+                    "Colour": "000000"
+                }
+            },
+            "server_roles": {
+                "test_role_ID": {
+                    "Name": "",
+                    "Colour": "000000",
+                    "Position": 0
+                }
+            },
+            "previous_season_statistics": {
+                "1": {
+                    "user_data": {},
+                    "total_games_played": 0,
+                    "start_date": "01/01/1970",
+                    "end_date": "01/01/1970"
+                }
+            }
+        }
+    }
+}

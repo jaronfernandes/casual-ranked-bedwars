@@ -21,3 +21,8 @@ Created (and finished) in January 2021, it has been subjected to severe deprecat
 This bot is meant for small servers. It takes advantage of Discord's messaging system by using a message the bot sends, and manipulates it to hold its own little database of player statistics. You will have to modify this system to accomodate more players or use an external database.
 
 Feel free to edit the array of maps and the other settings to whatever is up-to-date or to your liking.
+
+# Requirements:
+- discord, dotenv, python (preferably 3.6+)
+FOR PYTHON:
+- If you are a macOS user, navigate to the Applications/Python 3.11/ (or a different Python version, usually 3.6+) folder and double click on "Install Certificates.command".
