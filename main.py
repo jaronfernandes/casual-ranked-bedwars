@@ -49,13 +49,19 @@ class Match:
     - id: A unique identifier for the match.
     - date: The date the match was played on.
     - host: The host User of the match.
+    - max_players: The maximum number of players in the match.
     - players: A dictionaries of players in the match along with their ELO.
     - teams: A list of teams in the match.
-    - map: A string representing the map the match was played on.    
+    - map: A string representing the map the match was played on.
+    - is_big_team_map: A boolean representing whether the map is a 3s/4s map.
+    - is_ready: A boolean representing whether the match is ready to be played.
+    - is_randomized_teams: A boolean representing whether the teams are randomized.
+    - is_randomized_captains: A boolean representing whether the captains are randomized.
     """
     id: int
     date: str
     host: discord.User
+    max_players: int = 2
     players: dict[str: int]
     teams: dict[str: list[str]]
     map: str
@@ -64,11 +70,12 @@ class Match:
     is_randomized_teams: bool
     is_randomized_captains: bool
 
-    def __init__(self, id: int, date: str, players: dict[str: int], map: str, is_big_team_map: bool, host: discord.User) -> None:
+    def __init__(self, id: int, date: str, max_players: int, players: dict[str: int], map: str, is_big_team_map: bool, host: discord.User) -> None:
         """Initialize a new match."""
         self.id = id
         self.host = host
         self.date = date
+        self.max_players = max_players
         self.players = players
         self.map = map
         self.is_big_team_map = is_big_team_map
@@ -83,6 +90,18 @@ class Match:
     def get_host(self) -> discord.User:
         """Return the host of the match."""
         return self.host
+    
+    def get_max_players(self) -> int:
+        """Return the maximum number of players in the match."""
+        return self.max_players
+    
+    def get_randomized_teams(self) -> bool:
+        """Return whether the match has randomized teams."""
+        return self.is_randomized_teams
+    
+    def get_randomized_captains(self) -> bool:
+        """Return whether the match has randomized captains."""
+        return self.is_randomized_captains
 
     def player_in_match(self, player: str) -> bool:
         """Return whether player is in the match."""
@@ -129,7 +148,7 @@ class Match:
 class MatchMakeEmbed():
     match: Match
     title: str
-    players: list[str]
+    players: list[discord.User]
     img_file: discord.File
     embed: discord.Embed
 
@@ -138,14 +157,14 @@ class MatchMakeEmbed():
         self.title = f"New Casual Ranked Bedwars Match {match.id}"
         self.match = match
         self.img_file = None
-        self.players = [plr.name]
+        self.players = [plr]
         self.embed = discord.Embed(
             title=self.title, 
             description=str(match),
             color=0x00ff00
         )
 
-        self.embed.add_field(name="Players", value=", ".join(self.players), inline=True)
+        self.embed.add_field(name="Players (" + str(len(self.players)) + "/" + str(self.match.get_max_players()) + ")", value=self._get_players_string(), inline=True)
 
         try:
             file = discord.File("map_images/"+match.map+".png", filename=match.map+".png")
@@ -157,6 +176,13 @@ class MatchMakeEmbed():
             file = discord.File("map_images/hypixel.png", filename="hypixel.png")
             self.embed.set_image(url="attachment://" + file.filename)
             self.img_file = file
+
+        settings_str = \
+            "Randomized Teams: " + ("Enabled" if self.match.get_randomized_teams() else "Disabled") + "\n" + \
+            "Randomized Captains: " + ("Enabled" if self.match.get_randomized_captains() else "Disabled") + "\n" + \
+            "Max Players: " + str(self.match.get_max_players()) + "\n" 
+
+        self.embed.add_field(name="Settings", value=settings_str, inline=True)
 
     def get_embed(self) -> discord.Embed:
         """Return the embed."""
@@ -170,15 +196,26 @@ class MatchMakeEmbed():
         """Return the host."""
         return self.match.get_host()
     
-    def update_new_player(self, player: str) -> None:
+    def _get_players_string(self) -> str:
+        """Return a string of players."""
+        plrs_str = ""
+        
+        for player in self.players:
+            plrs_str += "<@"+ str(player.id) + ">, "
+
+        plrs_str = plrs_str.removesuffix(", ")
+
+        return plrs_str
+    
+    def update_new_player(self, player: discord.User) -> None:
         """Update the embed to include a new player."""
         self.players.append(player)
-        self.embed.set_field_at(name="Players", value=", ".join(self.players), inline=True)
+        self.embed.set_field_at(name="Players", value=self._get_players_string(), inline=True)
 
-    def remove_player(self, player: str) -> None:
+    def remove_player(self, player: discord.User) -> None:
         """Remove a player from the embed."""
         self.players.remove(player)
-        self.embed.set_field_at(name="Players", value=", ".join(self.players), inline=True)
+        self.embed.set_field_at(name="Players", value=self._get_players_string(), inline=True)
 
 
 ## GLOBAL VARIABLES
@@ -206,6 +243,12 @@ def setup_guild_in_json_file(guild_id: int) -> None:
                 "scorer_roles_ids": 123456789,
                 "CONCURRENT_MATCH_LIMIT": 0,
                 "COUNT_TOP_KILLS": True,
+                "current_season": {
+                    "season": 1,
+                    "start_date": str(date.today()),
+                    "end_date": "01/01/1970",
+                    "banned_items": ["Knockback Stick", "Pop-up Towers", "Obsidian", "Punch Bows"]
+                },
                 "games_played": 0,
                 "user_data": {},
                 "server_channels": {
@@ -219,6 +262,14 @@ def setup_guild_in_json_file(guild_id: int) -> None:
                     #     "Name": "",
                     #     "Colour": "000000",
                     #     "Position": 0
+                    # }
+                },
+                "previous_season_statistics": {
+                    # "1": {
+                    #     "user_data": {},
+                    #     "total_games_played": 0,
+                    #     "start_date": "01/01/1970",
+                    #     "end_date": "01/01/1970"
                     # }
                 }
             }
@@ -273,7 +324,7 @@ def valid_for_matchmaking(player: str) -> bool:
     return player not in players_in_game
 
 
-def create_match(player, playerscurrent_guild_id: int, is_big_team_map: bool = False, randomize_match: bool = False) -> Match:
+def create_match(player, playerscurrent_guild_id: int, is_big_team_map: bool = False, randomize_match: bool = False, max_players: int = 2) -> Match:
     """Return a new match.
     
     Preconditions:
@@ -311,7 +362,7 @@ def create_match(player, playerscurrent_guild_id: int, is_big_team_map: bool = F
                     print("The user may manually select their desired map.")
 
                 print(match_id, todays_date, players, map, is_big_team_map)
-                match_object = Match(match_id, todays_date, players, map, is_big_team_map, player)
+                match_object = Match(match_id, todays_date, max_players, players, map, is_big_team_map, player)
                 games_running[match_id] = match_object
                 return match_object
     except:
@@ -449,10 +500,12 @@ class RandomizeTeams(discord.ui.View):
 
 class RandomizeMap(discord.ui.View):
     has_interacted_with: bool
+    max_players: int
 
-    def __init__(self) -> None:
+    def __init__(self, max_players: int) -> None:
         super().__init__()
         self.has_interacted_with = False
+        self.max_players = max_players
 
     @button(label='Random', style=discord.ButtonStyle.primary, custom_id="randomize_button")
     async def randomize_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -463,7 +516,7 @@ class RandomizeMap(discord.ui.View):
         self.has_interacted_with = True
 
         self.clear_items()
-        match = create_match(interaction.user, interaction.guild.id, False, True)
+        match = create_match(interaction.user, interaction.guild.id, False, True, self.max_players)
         new_view = RandomizeTeams(match)
         await interaction.response.edit_message(content='Do you want to randomize teams?', view=new_view)
 
@@ -476,7 +529,7 @@ class RandomizeMap(discord.ui.View):
         self.has_interacted_with = True
         
         self.clear_items()
-        match = create_match(interaction.user, interaction.guild.id, False, False)
+        match = create_match(interaction.user, interaction.guild.id, False, False, self.max_players)
         new_view = RandomizeTeams(match)
         await interaction.response.edit_message(content='Do you want to randomize teams?', view=new_view)
 
@@ -495,10 +548,12 @@ class RandomizeMap(discord.ui.View):
 
 class UsingSmallerMaps(discord.ui.View):
     has_interacted_with: bool
+    max_players: int
 
-    def __init__(self) -> None:
+    def __init__(self, max_players: int) -> None:
         super().__init__()
         self.has_interacted_with = False
+        self.max_players = max_players
 
     @button(label='Yes', style=discord.ButtonStyle.primary, custom_id="yes_button")
     async def yes_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -508,7 +563,7 @@ class UsingSmallerMaps(discord.ui.View):
         
         self.has_interacted_with = True
         
-        new_view = RandomizeMap()
+        new_view = RandomizeMap(self.max_players)
         self.clear_items()
         await interaction.response.edit_message(content='Do you want to randomize your map?', view=new_view)
 
@@ -520,7 +575,7 @@ class UsingSmallerMaps(discord.ui.View):
         
         self.has_interacted_with = True
         
-        new_view = RandomizeMap()
+        new_view = RandomizeMap(self.max_players)
         self.clear_items()
         await interaction.response.edit_message(content='Do you want to randomize your map?', view=new_view)
 
@@ -557,7 +612,7 @@ class CreateMatch(discord.ui.View):
             
             self.has_interacted_with = True
         
-            new_view = UsingSmallerMaps()
+            new_view = UsingSmallerMaps(2)
             # self.clear_items()
             # await interaction.response.edit_message(content='Will you be using a 3s/4s map?', view=new_view)
             await interaction.response.send_message('Will you be using a 3s/4s map?', ephemeral=True, view=new_view)
@@ -574,7 +629,7 @@ class CreateMatch(discord.ui.View):
         
             self.has_interacted_with = True
         
-            new_view = UsingSmallerMaps()
+            new_view = UsingSmallerMaps(4)
             # self.clear_items()
             # await interaction.response.edit_message(content='Will you be using a 3s/4s map?', view=new_view)
             await interaction.response.send_message('Will you be using a 3s/4s map?', ephemeral=True, view=new_view)
@@ -591,7 +646,7 @@ class CreateMatch(discord.ui.View):
             self.has_interacted_with = True
         
         
-            new_view = RandomizeMap()
+            new_view = RandomizeMap(6)
             # self.clear_items()
             # await interaction.response.edit_message(content='Do you want to randomize your map?', view=new_view)
             await interaction.response.send_message('Do you want to randomize your map?', ephemeral=True, view=new_view)
@@ -608,7 +663,7 @@ class CreateMatch(discord.ui.View):
             self.has_interacted_with = True
         
 
-            new_view = RandomizeMap()
+            new_view = RandomizeMap(8)
             # self.clear_items()
             # await interaction.response.edit_message(content='Do you want to randomize your map?', view=new_view)
             await interaction.response.send_message('Do you want to randomize your map?', ephemeral=True, view=new_view)
@@ -655,7 +710,7 @@ class JoinGame(discord.ui.View):
         else:
             players_in_game[interaction.user.name] = True
             self.matching_embed.match.add_player(interaction.user.name, int(get_player_data_from_json_file(interaction.user, interaction.guild.id)["ELO"]))
-            self.matching_embed.update_new_player(interaction.user.name)
+            self.matching_embed.update_new_player(interaction.user)
             await interaction.response.send_message(interaction.user.name+' joined the match!', ephemeral=False)
 
     @button(label='Leave', style=discord.ButtonStyle.danger, custom_id="leave_button")
@@ -665,7 +720,7 @@ class JoinGame(discord.ui.View):
         else:
             del players_in_game[interaction.user.name]
             games_running[self.matching_embed.match.id].remove_player(interaction.user.name)
-            self.matching_embed.remove_player(interaction.user.name)
+            self.matching_embed.remove_player(interaction.user)
             await interaction.response.send_message(interaction.user.name+' left the match!', ephemeral=False)
 
     @button(label='Cancel', style=discord.ButtonStyle.danger, custom_id="cancel_match_button")
@@ -686,7 +741,7 @@ class JoinGame(discord.ui.View):
             await interaction.response.send_message(content=interaction.user.name+' cancelled the match!', view=self)
 
 
-## EVENTS
+## SLASH COMMANDS
 
 
 @bot.tree.command(name = "commandname", description = "My first application Command")
@@ -709,6 +764,14 @@ async def retrieve_data(interaction: discord.interactions.Interaction):
     else:
         await interaction.channel.send('You\'re already in a game!')
 
+@bot.tree.command(name = "queue", description = "View the queue for your current game")
+async def queue(interaction: discord.interactions.Interaction):
+    if not valid_for_matchmaking(interaction.user.name):
+        match = games_running[interaction.user.name]
+        await interaction.channel.send(f"Match ID {match.id} on {match.date} hosted by <@{match.host.id}> on {match.map}.")
+
+## EVENTS
+
 @bot.event
 async def on_ready():
     await bot.tree.sync()
@@ -727,6 +790,22 @@ async def play(ctx: commands.Context):
         await ctx.send(content="Enter the amount of players you'd like to play with with (2,4,6,8).", view=viewe)
     else:
         await ctx.send('You\'re already in a game!')
+
+@bot.command(name = "games", description = "View all the current games running")
+async def games(ctx: commands.Context):
+    pass
+
+@bot.command(name = "queue", description = "View the queue for your current game.")
+async def queue(ctx: commands.Context):
+    pass
+
+@bot.command(name = "stats", description = "Get your current season statistics")
+async def stats(ctx: commands.Context):
+    pass
+
+@bot.command(name = "season", description = "View the current season")
+async def season(ctx: commands.Context):
+    await ctx.send("The current season is season 1.")
 
 @bot.event
 async def end():
