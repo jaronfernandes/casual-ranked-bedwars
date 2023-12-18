@@ -278,6 +278,7 @@ def setup_guild_in_json_file(guild_id: int) -> None:
             with open("data", "w") as jsonFile:
                 json.dump(data, jsonFile)
 
+
 def get_player_data_from_json_file(player, current_guild_id: int) -> dict:
     """Return a dictionary of player data from a file.
     
@@ -317,6 +318,7 @@ def get_player_data_from_json_file(player, current_guild_id: int) -> dict:
             print(f"Created new data for player {player_name}")
             return data["SERVERS"][str(current_guild_id)]["user_data"][player_id]
         
+
 def valid_for_matchmaking(player: str) -> bool:
     """Return whether a player is valid for matchmaking.
     
@@ -372,6 +374,7 @@ def create_match(player, playerscurrent_guild_id: int, is_big_team_map: bool = F
         print("Error creating match.")
         return None
     
+
 def get_season_embed(current_guild: discord.Guild) -> discord.Embed:
     """Return an embed for the current season.
     
@@ -433,6 +436,62 @@ def get_season_embed(current_guild: discord.Guild) -> discord.Embed:
             print("Error getting guild image embed.")
 
         return embed
+    
+    
+def create_rules_embed(ctx):
+    """Return an embed for the rules."""
+    rules_embed = discord.Embed(
+        title="Casual Ranked Bedwars Rules",
+        description="Basic Rules for Casual Ranked Bedwars games.",
+        # colour yellow
+        color=0xffff00
+    )
+    
+    # { name: "First Rusher:", value: "Gets 28-36 iron to buy blocks and bridges to mid and 2 stacks (sometimes a mix of 1, 2, and 3 stack in some cases", inline: true},
+    # { name: "Second Rusher:", value: "Gets a base of 12 gold to buy iron armour, and a quantity of iron to get blocks/tools/swords", inline: true},
+    # { name: "Third Rusher:", value: "Drops 15-25 iron to the defender. May also get iron armour, blocks/tools/swords, and other items (fireballs)", inline: true},
+    # { name: "Fourth Rusher:", value: "Gets 64 + 8 iron (or 4 gold and 48 iron) to buy an endstone/wood butterfly defense, and places it down. They then follow the others to mid.", inline: true},
+    
+    rules_embed.add_field(name="First Rusher:", value="Gets 28-36 iron to buy blocks and bridges to mid and 2 stacks (sometimes a mix of 1, 2, and 3 stack in some cases", inline=False)
+    rules_embed.add_field(name="Second Rusher:", value="Gets a base of 12 gold to buy iron armour, and a quantity of iron to get blocks/tools/swords", inline=False)
+    rules_embed.add_field(name="Third Rusher:", value="Drops 15-25 iron to the defender. May also get iron armour, blocks/tools/swords, and other items (fireballs)", inline=False)
+    rules_embed.add_field(name="Fourth Rusher:", value="Gets 64 + 8 iron (or 4 gold and 48 iron) to buy an endstone/wood butterfly defense, and places it down. They then follow the others to mid.", inline=False)
+
+    try:
+        rules_embed.set_thumbnail(url=ctx.guild.icon)
+    except Exception as e:
+        print(e)
+        print("Error getting guild image embed.")
+    return rules_embed
+
+
+def create_help_embed(ctx):
+    """Return an embed for the help menu."""
+    help_embed = discord.Embed(
+        title="Casual Ranked Bedwars Help Menu",
+        description="Use Slash (/) Interactions or the prefix ! to execute commands.",
+        # colour white
+        color=0xffffff
+    )
+
+    help_embed.add_field(name="help", value="View the help menu.", inline=False)
+    help_embed.add_field(name="play", value="Start a new game.", inline=False)
+    help_embed.add_field(name="queue", value="View the queue for your current game.", inline=False)
+    help_embed.add_field(name="stats", value="Get your current season statistics.", inline=False)
+    help_embed.add_field(name="season", value="View the current season.", inline=False)
+    help_embed.add_field(name="rules", value="View the rules and instructions for Casual Ranked Bedwars.", inline=False)
+    help_embed.add_field(name="maps", value="View the maps currently in rotation.", inline=False)
+    help_embed.add_field(name="lb", value="View the leaderboard.", inline=False)
+    help_embed.add_field(name="winners", value="View the winners of the previous season.", inline=False)
+    help_embed.add_field(name="score", value="Score a game [ADMINS ONLY]", inline=False)
+    help_embed.add_field(name="reset-season", value="Reset the season to a new one [ADMINS ONLY]", inline=False)
+
+    try:
+        help_embed.set_thumbnail(url=ctx.guild.icon)
+    except Exception as e:
+        print(e)
+        print("Error getting guild image embed.")
+    return help_embed
 
 
 ## UI CLASSES
@@ -770,6 +829,10 @@ class JoinGame(discord.ui.View):
 
     @button(label='Join', style=discord.ButtonStyle.primary, custom_id="join_button")
     async def join_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if self.has_interacted_with:
+            await interaction.response.send_message('This message has expired!', ephemeral=True)
+            return
+        
         if interaction.user.id == self.matching_embed.get_host().id:
             await interaction.response.send_message('You can\'t join your own match!', ephemeral=True)
         else:
@@ -780,6 +843,10 @@ class JoinGame(discord.ui.View):
 
     @button(label='Leave', style=discord.ButtonStyle.danger, custom_id="leave_button")
     async def leave_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if self.has_interacted_with:
+            await interaction.response.send_message('This message has expired!', ephemeral=True)
+            return
+        
         if interaction.user.id == self.matching_embed.get_host().id:
             await interaction.response.send_message('You can\'t leave your own match!', ephemeral=True)
         else:
@@ -813,10 +880,12 @@ class JoinGame(discord.ui.View):
 async def first_command(interaction):
     await interaction.response.send_message("Hello!")
 
+
 @bot.tree.command(name = "add", description = "Add (or retrieve) a user from data file.")
 async def retrieve_data(interaction):
     data = get_player_data_from_json_file(interaction.user, interaction.guild.id)
     await interaction.response.send_message(data)
+
 
 @bot.tree.command(name = "play", description = "Start a new game")
 async def retrieve_data(interaction: discord.interactions.Interaction):
@@ -827,29 +896,49 @@ async def retrieve_data(interaction: discord.interactions.Interaction):
         viewe = CreateMatch(interaction.user)
         await interaction.response.send_message(content="Enter the amount of players you'd like to play with with (2,4,6,8).", view=viewe, ephemeral=True)
     else:
-        await interaction.channel.send('You\'re already in a game!')
+        await interaction.response.send_message(content='You\'re already in a game!', ephemeral=True)
+
 
 @bot.tree.command(name = "queue", description = "View the queue for your current game")
 async def queue(interaction: discord.interactions.Interaction):
     if not valid_for_matchmaking(interaction.user.name):
         match = games_running[interaction.user.name]
-        await interaction.channel.send(f"Match ID {match.id} on {match.date} hosted by <@{match.host.id}> on {match.map}.")
+        await interaction.response.send_message(content=f"Match ID {match.id} on {match.date} hosted by <@{match.host.id}> on {match.map}.", ephemeral=True)
+
 
 @bot.tree.command(name = "season", description = "View the current season")
 async def season(interaction: discord.interactions.Interaction):
-    await interaction.channel.send("The current season is season 1.", embed=get_season_embed(interaction.guild.id))
+    await interaction.response.send_message(content="The current season is season 1.", embed=get_season_embed(interaction.guild.id), ephemeral=True)
+
+
+@bot.tree.command(name = "help", description = "View the help menu")
+async def help(interaction: discord.interactions.Interaction):
+    help_embed = create_help_embed(interaction)
+
+    await interaction.response.send_message(embed=help_embed, ephemeral=True)
+
+
+@bot.tree.command(name = "rules", description = "View the rules for Casual Ranked Bedwars")
+async def rules(interaction: discord.interactions.Interaction):
+    rules_embed = create_rules_embed(interaction)
+
+    await interaction.response.send_message(embed=rules_embed, ephemeral=True)
+
 
 ## EVENTS
+
 
 @bot.event
 async def on_ready():
     await bot.tree.sync()
     print('Bot is ready.')
     
+
 @bot.command(name = "add", description = "Add (or retrieve) a user from data file.")
 async def add(ctx: commands.Context):
     get_player_data_from_json_file(ctx.author, ctx.guild.id)
     await ctx.send('Added player '+ctx.author.name+" to the data file!")    
+
 
 @bot.command(name = "play", description = "Start a new game")
 async def play(ctx: commands.Context):
@@ -860,80 +949,44 @@ async def play(ctx: commands.Context):
     else:
         await ctx.send('You\'re already in a game!')
 
+
 @bot.command(name = "games", description = "View all the current games running")
 async def games(ctx: commands.Context):
     pass
+
 
 @bot.command(name = "queue", description = "View the queue for your current game.")
 async def queue(ctx: commands.Context):
     pass
 
+
 @bot.command(name = "stats", description = "Get your current season statistics")
 async def stats(ctx: commands.Context):
     pass
+
 
 @bot.command(name = "season", description = "View the current season")
 async def season(ctx: commands.Context):
     await ctx.send(embed=get_season_embed(ctx.guild))
 
+
 @bot.command(name = "help", description = "View the help menu")
 async def help(ctx: commands.Context):
-    help_embed = discord.Embed(
-        title="Casual Ranked Bedwars Help Menu",
-        description="Use Slash (/) Interactions or the prefix ! to execute commands.",
-        # colour white
-        color=0xffffff
-    )
-
-    help_embed.add_field(name="help", value="View the help menu.", inline=False)
-    help_embed.add_field(name="play", value="Start a new game.", inline=False)
-    help_embed.add_field(name="queue", value="View the queue for your current game.", inline=False)
-    help_embed.add_field(name="stats", value="Get your current season statistics.", inline=False)
-    help_embed.add_field(name="season", value="View the current season.", inline=False)
-    help_embed.add_field(name="rules", value="View the rules and instructions for Casual Ranked Bedwars.", inline=False)
-    help_embed.add_field(name="maps", value="View the maps currently in rotation.", inline=False)
-    help_embed.add_field(name="lb", value="View the leaderboard.", inline=False)
-    help_embed.add_field(name="winners", value="View the winners of the previous season.", inline=False)
-    help_embed.add_field(name="score", value="Score a game [ADMINS ONLY]", inline=False)
-    help_embed.add_field(name="reset-season", value="Reset the season to a new one [ADMINS ONLY]", inline=False)
-
-    try:
-        help_embed.set_thumbnail(url=ctx.guild.icon)
-    except Exception as e:
-        print(e)
-        print("Error getting guild image embed.")
+    help_embed = create_help_embed(ctx)
 
     await ctx.send(embed=help_embed)
 
+
 @bot.command(name = "rules", description = "View the rules for Casual Ranked Bedwars")
 async def rules(ctx: commands.Context):
-    rules_embed = discord.Embed(
-        title="Casual Ranked Bedwars Rules",
-        description="Basic Rules for Casual Ranked Bedwars games.",
-        # colour yellow
-        color=0xffff00
-    )
-    
-    # { name: "First Rusher:", value: "Gets 28-36 iron to buy blocks and bridges to mid and 2 stacks (sometimes a mix of 1, 2, and 3 stack in some cases", inline: true},
-    # { name: "Second Rusher:", value: "Gets a base of 12 gold to buy iron armour, and a quantity of iron to get blocks/tools/swords", inline: true},
-    # { name: "Third Rusher:", value: "Drops 15-25 iron to the defender. May also get iron armour, blocks/tools/swords, and other items (fireballs)", inline: true},
-    # { name: "Fourth Rusher:", value: "Gets 64 + 8 iron (or 4 gold and 48 iron) to buy an endstone/wood butterfly defense, and places it down. They then follow the others to mid.", inline: true},
-    
-    rules_embed.add_field(name="First Rusher:", value="Gets 28-36 iron to buy blocks and bridges to mid and 2 stacks (sometimes a mix of 1, 2, and 3 stack in some cases", inline=False)
-    rules_embed.add_field(name="Second Rusher:", value="Gets a base of 12 gold to buy iron armour, and a quantity of iron to get blocks/tools/swords", inline=False)
-    rules_embed.add_field(name="Third Rusher:", value="Drops 15-25 iron to the defender. May also get iron armour, blocks/tools/swords, and other items (fireballs)", inline=False)
-    rules_embed.add_field(name="Fourth Rusher:", value="Gets 64 + 8 iron (or 4 gold and 48 iron) to buy an endstone/wood butterfly defense, and places it down. They then follow the others to mid.", inline=False)
-
-    try:
-        rules_embed.set_thumbnail(url=ctx.guild.icon)
-    except Exception as e:
-        print(e)
-        print("Error getting guild image embed.")
+    rules_embed = create_rules_embed(ctx)
 
     await ctx.send(embed=rules_embed)
+
 
 @bot.event
 async def end():
     await bot.close()
+
 
 bot.run(BOT_TOKEN)
