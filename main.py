@@ -246,7 +246,7 @@ def setup_guild_in_json_file(guild_id: int) -> None:
                 "current_season": {
                     "season": 1,
                     "start_date": str(date.today()),
-                    "end_date": "01/01/1970",
+                    "end_date": "N/A",
                     "banned_items": ["Knockback Stick", "Pop-up Towers", "Obsidian", "Punch Bows"]
                 },
                 "games_played": 0,
@@ -368,6 +368,31 @@ def create_match(player, playerscurrent_guild_id: int, is_big_team_map: bool = F
     except:
         print("Error creating match.")
         return None
+    
+def get_season_embed(current_guild_id: int) -> discord.Embed:
+    """Return an embed for the current season.
+    
+    Preconditions:
+    - current_guild_id is the ID of the current guild.
+    """
+    with open("data", "r") as file:
+        string = file.read()
+        data = json.loads(string)
+        current_season = data["SERVERS"][str(current_guild_id)]["current_season"]
+        season = current_season["season"]
+        start_date = current_season["start_date"]
+        end_date = current_season["end_date"]
+        banned_items = current_season["banned_items"]
+
+        embed = discord.Embed(
+            title="Season " + str(season),
+            description="Season " + str(season) + " started on " + start_date + " and will end on " + end_date + ".",
+            color=0x00ff00
+        )
+
+        embed.add_field(name="Banned Items", value=str(banned_items), inline=True)
+
+        return embed
 
 
 ## UI CLASSES
@@ -770,6 +795,10 @@ async def queue(interaction: discord.interactions.Interaction):
         match = games_running[interaction.user.name]
         await interaction.channel.send(f"Match ID {match.id} on {match.date} hosted by <@{match.host.id}> on {match.map}.")
 
+@bot.tree.command(name = "season", description = "View the current season")
+async def season(interaction: discord.interactions.Interaction):
+    await interaction.channel.send("The current season is season 1.", embed=get_season_embed(interaction.guild.id))
+
 ## EVENTS
 
 @bot.event
@@ -805,7 +834,7 @@ async def stats(ctx: commands.Context):
 
 @bot.command(name = "season", description = "View the current season")
 async def season(ctx: commands.Context):
-    await ctx.send("The current season is season 1.")
+    await ctx.send("The current season is season 1.", embed=get_season_embed(ctx.guild.id))
 
 @bot.event
 async def end():
