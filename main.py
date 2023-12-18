@@ -24,6 +24,7 @@ BOT_TOKEN = os.getenv('TOKEN')
 intents = discord.Intents.all()
 # intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
+bot.remove_command("help")
 
 """
         //ELO SYSTEM\\
@@ -424,6 +425,12 @@ def get_season_embed(current_guild: discord.Guild) -> discord.Embed:
             "Total Matches: " + str(current_season["total_games_played"]) + "\n"
 
         embed.add_field(name="Season Statistics", value=season_stats_str)
+
+        try:
+            embed.set_thumbnail(url=current_guild.icon)
+        except Exception as e:
+            print(e)
+            print("Error getting guild image embed.")
 
         return embed
 
@@ -868,6 +875,62 @@ async def stats(ctx: commands.Context):
 @bot.command(name = "season", description = "View the current season")
 async def season(ctx: commands.Context):
     await ctx.send(embed=get_season_embed(ctx.guild))
+
+@bot.command(name = "help", description = "View the help menu")
+async def help(ctx: commands.Context):
+    help_embed = discord.Embed(
+        title="Casual Ranked Bedwars Help Menu",
+        description="Use Slash (/) Interactions or the prefix ! to execute commands.",
+        # colour white
+        color=0xffffff
+    )
+
+    help_embed.add_field(name="help", value="View the help menu.", inline=False)
+    help_embed.add_field(name="play", value="Start a new game.", inline=False)
+    help_embed.add_field(name="queue", value="View the queue for your current game.", inline=False)
+    help_embed.add_field(name="stats", value="Get your current season statistics.", inline=False)
+    help_embed.add_field(name="season", value="View the current season.", inline=False)
+    help_embed.add_field(name="rules", value="View the rules and instructions for Casual Ranked Bedwars.", inline=False)
+    help_embed.add_field(name="maps", value="View the maps currently in rotation.", inline=False)
+    help_embed.add_field(name="lb", value="View the leaderboard.", inline=False)
+    help_embed.add_field(name="winners", value="View the winners of the previous season.", inline=False)
+    help_embed.add_field(name="score", value="Score a game [ADMINS ONLY]", inline=False)
+    help_embed.add_field(name="reset-season", value="Reset the season to a new one [ADMINS ONLY]", inline=False)
+
+    try:
+        help_embed.set_thumbnail(url=ctx.guild.icon)
+    except Exception as e:
+        print(e)
+        print("Error getting guild image embed.")
+
+    await ctx.send(embed=help_embed)
+
+@bot.command(name = "rules", description = "View the rules for Casual Ranked Bedwars")
+async def rules(ctx: commands.Context):
+    rules_embed = discord.Embed(
+        title="Casual Ranked Bedwars Rules",
+        description="Basic Rules for Casual Ranked Bedwars games.",
+        # colour yellow
+        color=0xffff00
+    )
+    
+    # { name: "First Rusher:", value: "Gets 28-36 iron to buy blocks and bridges to mid and 2 stacks (sometimes a mix of 1, 2, and 3 stack in some cases", inline: true},
+    # { name: "Second Rusher:", value: "Gets a base of 12 gold to buy iron armour, and a quantity of iron to get blocks/tools/swords", inline: true},
+    # { name: "Third Rusher:", value: "Drops 15-25 iron to the defender. May also get iron armour, blocks/tools/swords, and other items (fireballs)", inline: true},
+    # { name: "Fourth Rusher:", value: "Gets 64 + 8 iron (or 4 gold and 48 iron) to buy an endstone/wood butterfly defense, and places it down. They then follow the others to mid.", inline: true},
+    
+    rules_embed.add_field(name="First Rusher:", value="Gets 28-36 iron to buy blocks and bridges to mid and 2 stacks (sometimes a mix of 1, 2, and 3 stack in some cases", inline=False)
+    rules_embed.add_field(name="Second Rusher:", value="Gets a base of 12 gold to buy iron armour, and a quantity of iron to get blocks/tools/swords", inline=False)
+    rules_embed.add_field(name="Third Rusher:", value="Drops 15-25 iron to the defender. May also get iron armour, blocks/tools/swords, and other items (fireballs)", inline=False)
+    rules_embed.add_field(name="Fourth Rusher:", value="Gets 64 + 8 iron (or 4 gold and 48 iron) to buy an endstone/wood butterfly defense, and places it down. They then follow the others to mid.", inline=False)
+
+    try:
+        rules_embed.set_thumbnail(url=ctx.guild.icon)
+    except Exception as e:
+        print(e)
+        print("Error getting guild image embed.")
+
+    await ctx.send(embed=rules_embed)
 
 @bot.event
 async def end():
