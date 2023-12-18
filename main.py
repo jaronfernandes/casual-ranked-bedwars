@@ -498,6 +498,7 @@ def create_help_embed(ctx):
 
 
 def create_maps_embed(ctx):
+    """Return an embed for the maps menu."""
     maps_embed = discord.Embed(
         title="Maps",
         description="Maps currently in Casual Ranked Bedwars rotation",
@@ -517,6 +518,47 @@ def create_maps_embed(ctx):
         print(e)
         print("Error getting guild image embed.")
     return maps_embed
+
+
+def create_stats_embed(ctx):
+    """Return an embed for the stats menu."""
+    current_guild_id = ctx.guild.id
+
+    user_data = get_player_data_from_json_file(ctx.author, current_guild_id)
+
+    with open('data', 'r') as file:
+        string = file.read()
+        data = json.loads(string)
+
+    user_data = data["SERVERS"][str(ctx.guild.id)]["user_data"]
+    user_id = str(ctx.author.id)
+
+    user_stats = user_data[user_id]
+
+    stats_embed = discord.Embed(
+        title=f"{ctx.author.name}'s Overall Stats" ,
+        # colour orange
+        color=0xffa500
+    )
+    # {(str(count) + '. <@' + str(player['ID']) + '>') : <30}
+    stats_row_one = \
+        f'{"ELO: " + str(user_stats["ELO"]) : <40}' + "\t" + f'{"Wins: " + str(user_stats["Wins"]) : <40}' + "\t" + f'{"Losses: " + str(user_stats["Losses"]) : <40}'
+        # "ELO: " + str(user_stats["ELO"]) + "\n" + \
+        # "Wins: " + str(user_stats["Wins"]) + "\n" + \
+        # "Losses: " + str(user_stats["Losses"]) + "\n"
+    
+    stats_row_two = \
+        f"{('Winstreak: ' + str(user_stats['Winstreak'])) : <5}" + "\t" + f'{"WLR: " + str(round(user_stats["Wins"] / max(1, (user_stats["Wins"] + user_stats["Losses"])) , 2)) + "%" : <40}' + "\t" + f'{"Games: " + str(user_stats["Wins"] + user_stats["Losses"]) : <40}'
+
+    stats_embed.add_field(name=f"Season {str(data['SERVERS'][str(current_guild_id)]['current_season']['season'])} Statistics", value=stats_row_one, inline=True)
+    stats_embed.add_field(value=stats_row_two, name="", inline=False)
+
+    try:
+        stats_embed.set_thumbnail(url=ctx.author.avatar)
+    except Exception as e:
+        print(e)
+        print("Error getting user image embed.")
+    return stats_embed
 
 
 ## END OF FUNCTIONS
@@ -983,7 +1025,7 @@ async def on_ready():
 @bot.command(name = "add", description = "Add (or retrieve) a user from data file.")
 async def add(ctx: commands.Context):
     get_player_data_from_json_file(ctx.author, ctx.guild.id)
-    await ctx.send('Added player '+ctx.author.name+" to the data file!")    
+    await ctx.send(f"Added player {ctx.author.name} to the data file!")    
 
 
 @bot.command(name = "play", description = "Start a new game")
@@ -1028,7 +1070,9 @@ async def rules(ctx: commands.Context):
 
 @bot.command(name = "stats", description = "Get your current season statistics")
 async def stats(ctx: commands.Context):
-    pass
+    stats_embed = create_stats_embed(ctx)
+
+    await ctx.send(embed=stats_embed)
 
 
 @bot.command(name = "maps", description = "View the maps currently in rotation")
@@ -1036,6 +1080,11 @@ async def maps(ctx: commands.Context):
     maps_embed = create_maps_embed(ctx)
 
     await ctx.send(embed=maps_embed)
+
+
+@bot.command(name = "lb", description = "View the leaderboard for the current season")
+async def lb(ctx: commands.Context):
+    pass
 
 
 @bot.event
