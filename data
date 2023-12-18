@@ -6,6 +6,18 @@
             "scorer_roles_ids": 123456789,
             "CONCURRENT_MATCH_LIMIT": 0,
             "COUNT_TOP_KILLS": true,
+            "current_season": {
+                "season": 1,
+                "total_games_played": 0,
+                "start_date": "01/01/1970",
+                "end_date": "01/01/1970",
+                "banned_items": [
+                    "Knockback Stick",
+                    "Pop-up Towers",
+                    "Obsidian",
+                    "Punch Bows"
+                ]
+            },
             "games_played": 0,
             "user_data": {
                 "test_user_ID": {
@@ -27,6 +39,14 @@
                     "Name": "",
                     "Colour": "000000",
                     "Position": 0
+                }
+            },
+            "previous_season_statistics": {
+                "1": {
+                    "user_data": {},
+                    "total_games_played": 0,
+                    "start_date": "01/01/1970",
+                    "end_date": "01/01/1970"
                 }
             }
         }
