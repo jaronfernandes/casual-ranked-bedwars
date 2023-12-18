@@ -245,6 +245,7 @@ def setup_guild_in_json_file(guild_id: int) -> None:
                 "COUNT_TOP_KILLS": True,
                 "current_season": {
                     "season": 1,
+                    "total_games_played": 0,
                     "start_date": str(date.today()),
                     "end_date": "N/A",
                     "banned_items": ["Knockback Stick", "Pop-up Towers", "Obsidian", "Punch Bows"]
@@ -344,6 +345,7 @@ def create_match(player, playerscurrent_guild_id: int, is_big_team_map: bool = F
 
             with open("data", "w") as jsonfile:
                 data["SERVERS"][str(playerscurrent_guild_id)]["games_played"] += 1
+                data["SERVERS"][str(playerscurrent_guild_id)]["current_season"]["total_games_played"] += 1
                 json.dump(data, jsonfile)
 
             todays_date = date.today()
@@ -369,15 +371,22 @@ def create_match(player, playerscurrent_guild_id: int, is_big_team_map: bool = F
         print("Error creating match.")
         return None
     
-def get_season_embed(current_guild_id: int) -> discord.Embed:
+def get_season_embed(current_guild: discord.Guild) -> discord.Embed:
     """Return an embed for the current season.
     
     Preconditions:
     - current_guild_id is the ID of the current guild.
     """
+    current_guild_id = current_guild.id
+
     with open("data", "r") as file:
         string = file.read()
         data = json.loads(string)
+
+        if str(current_guild_id) not in data["SERVERS"]:
+            setup_guild_in_json_file(current_guild_id)
+            print(f"Created new server {current_guild_id} in data file.")
+
         current_season = data["SERVERS"][str(current_guild_id)]["current_season"]
         season = current_season["season"]
         start_date = current_season["start_date"]
@@ -385,12 +394,36 @@ def get_season_embed(current_guild_id: int) -> discord.Embed:
         banned_items = current_season["banned_items"]
 
         embed = discord.Embed(
-            title="Season " + str(season),
-            description="Season " + str(season) + " started on " + start_date + " and will end on " + end_date + ".",
-            color=0x00ff00
+            title= current_guild.name + " | Season " + str(season),
+            description="Season " + str(season) + " started on " + start_date + (" and ended on " + end_date + "." if end_date != "N/A" else "."),
+            # aqua colour
+            color= 0x00ffff
         )
 
-        embed.add_field(name="Banned Items", value=str(banned_items), inline=True)
+        plrs = []
+        # get top players based on ELO below
+        for player in data["SERVERS"][str(current_guild_id)]["user_data"]:
+            plrs.append({
+                "ID": player,
+                "ELO": data["SERVERS"][str(current_guild_id)]["user_data"][player]["ELO"]
+                })
+        top_players = sorted(plrs, key=lambda k: k["ELO"], reverse=True)[:10]
+        top_players_str = ""
+
+        count = 1
+
+        for player in top_players:
+            top_players_str += f"{(str(count) + '. <@' + str(player['ID']) + '>') : <30}" + "\t ELO: " + str(player["ELO"]) + "\n"
+            count += 1
+
+        embed.add_field(name="Top Players", value=top_players_str, inline=False)
+
+        embed.add_field(name="Banned Items", value=str(",\n".join(banned_items)), inline=True)
+
+        season_stats_str = \
+            "Total Matches: " + str(current_season["total_games_played"]) + "\n"
+
+        embed.add_field(name="Season Statistics", value=season_stats_str)
 
         return embed
 
@@ -834,7 +867,7 @@ async def stats(ctx: commands.Context):
 
 @bot.command(name = "season", description = "View the current season")
 async def season(ctx: commands.Context):
-    await ctx.send("The current season is season 1.", embed=get_season_embed(ctx.guild.id))
+    await ctx.send(embed=get_season_embed(ctx.guild))
 
 @bot.event
 async def end():
