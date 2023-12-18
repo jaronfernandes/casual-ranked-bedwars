@@ -375,6 +375,19 @@ def create_match(player, playerscurrent_guild_id: int, is_big_team_map: bool = F
         return None
     
 
+def handle_matchmaking(match: Match) -> bool:
+    """Handle matchmaking for a match.
+    
+    Preconditions:
+    - match is a valid Match object.
+    """
+    if len(match.players) == match.max_players:
+        match.set_ready()
+        return True
+    
+    return False
+    
+
 def get_season_embed(current_guild: discord.Guild) -> discord.Embed:
     """Return an embed for the current season.
     
@@ -590,10 +603,9 @@ class RandomizeCaptains(discord.ui.View):
         new_view = JoinGame(self.match, interaction.user)
         embedy = new_view.get_embed()
         filey = new_view.get_file()
-        interaction.delete_original_response()
 
         await interaction.response.send_message(
-            interaction.user.name+' is now hosting a match!', 
+            '<@' + str(interaction.user.id) +'> is now hosting a match!', 
             ephemeral=False, 
             file=filey,
             embed=embedy,
@@ -615,7 +627,7 @@ class RandomizeCaptains(discord.ui.View):
         filey = new_view.get_file()
 
         await interaction.response.send_message(
-            interaction.user.name+' is now hosting a match!', 
+            '<@' + str(interaction.user.id) +'> is now hosting a match!', 
             ephemeral=False, 
             file=filey,
             embed=embedy,
@@ -657,10 +669,8 @@ class RandomizeTeams(discord.ui.View):
         embedy = new_view.get_embed()
         filey = new_view.get_file()
 
-        interaction.message.delete()
-
         await interaction.response.send_message(
-            interaction.user.name+' is now hosting a match!', 
+            '<@' + str(interaction.user.id) +'> is now hosting a match!', 
             ephemeral=False, 
             file=filey,
             embed=embedy,
@@ -940,7 +950,7 @@ class JoinGame(discord.ui.View):
             for player in self.matching_embed.match.players:
                 del players_in_game[player]
             del games_running[self.matching_embed.match.id]
-            await interaction.response.send_message(content=interaction.user.name+' cancelled the match!', view=self)
+            await interaction.response.send_message(content="<@" + str(interaction.user.id)+'> cancelled the match!', view=self)
 
 
 ## END OF UI CLASSES
@@ -960,7 +970,7 @@ async def retrieve_data(interaction):
     await interaction.response.send_message(data)
 
 
-@bot.tree.command(name = "play", description = "Start a new game")
+@bot.tree.command(name = "play", description = "Host a new game")
 async def retrieve_data(interaction: discord.interactions.Interaction):
     # interaction.channel.send("Enter the amount of players you'd like to play with with (2,4,6,8).")
 
@@ -984,14 +994,14 @@ async def season(interaction: discord.interactions.Interaction):
     await interaction.response.send_message(content="The current season is season 1.", embed=get_season_embed(interaction.guild), ephemeral=True)
 
 
-@bot.tree.command(name = "help", description = "View the help menu")
+@bot.tree.command(name = "help", description = "View all the bot commands")
 async def help(interaction: discord.interactions.Interaction):
     help_embed = create_help_embed(interaction)
 
     await interaction.response.send_message(embed=help_embed, ephemeral=True)
 
 
-@bot.tree.command(name = "rules", description = "View the rules for Casual Ranked Bedwars")
+@bot.tree.command(name = "rules", description = "A basic overview of Casual Ranked Bedwars rushing strategies")
 async def rules(interaction: discord.interactions.Interaction):
     rules_embed = create_rules_embed(interaction)
 
@@ -1000,7 +1010,9 @@ async def rules(interaction: discord.interactions.Interaction):
 
 @bot.tree.command(name = "stats", description = "Get your current season statistics")
 async def stats(interaction: discord.interactions.Interaction):
-    pass
+    stats_embed = create_stats_embed(interaction)
+
+    await interaction.response.send_message(embed=stats_embed, ephemeral=True)
 
 
 @bot.tree.command(name = "maps", description = "View the maps currently in rotation")
