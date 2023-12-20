@@ -8,7 +8,7 @@ class Play(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
-    @commands.hybrid_command(aliases = ['p', 'start'], brief = '')
+    @commands.hybrid_command(aliases = ['p', 'start'], brief = 'Start a new game')
     async def play(self, ctx):
         """Display the map pool for the current season."""
         if valid_for_matchmaking(ctx.author.name):

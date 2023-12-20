@@ -57,7 +57,7 @@ class Stats(commands.Cog):
             print("Error getting user image embed.")
         return stats_embed
     
-    @commands.hybrid_command(aliases = ['s', 'statistics'], brief = '')
+    @commands.hybrid_command(aliases = ['s', 'statistics'], brief = "stats [DISCORD USERNAME] (default yours)", description = "View your stats or another player's stats.")
     async def stats(self, ctx):
         """Display the map pool for the current season."""
         await ctx.send(embed=self.create_stats_embed(ctx))
