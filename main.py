@@ -25,6 +25,8 @@ intents = discord.Intents.all()
 # intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 bot.remove_command("help")
+bot.remove_command("stats")
+
 
 """
         //ELO SYSTEM\\
@@ -41,7 +43,9 @@ bot.remove_command("help")
     1000+ W: +10 L: -30
 """
 
+
 ## CLASSES
+
 
 class Match:
     """Class for a ranked bedwars match.
@@ -510,73 +514,50 @@ def create_help_embed(ctx):
     return help_embed
 
 
-def create_maps_embed(ctx):
-    """Return an embed for the maps menu."""
-    maps_embed = discord.Embed(
-        title="Maps",
-        description="Maps currently in Casual Ranked Bedwars rotation",
-        # colour turqoise
-        color=0x40e0d0
-    )
+# def create_stats_embed(ctx):
+#     """Return an embed for the stats menu."""
+#     current_guild_id = ctx.guild.id
 
-    with open("maps", "r") as file:
-        # csv file
-        string = file.read()
-        maps = string.split("\n")
-        maps_embed.add_field(name="Maps", value=str("\n".join(maps)), inline=False)
+#     if type(ctx) == discord.interactions.Interaction:
+#         author = ctx.user
+#     else:
+#         author = ctx.author
 
-    try:
-        maps_embed.set_thumbnail(url=ctx.guild.icon)
-    except Exception as e:
-        print(e)
-        print("Error getting guild image embed.")
-    return maps_embed
+#     user_data = get_player_data_from_json_file(author, current_guild_id)
 
+#     with open('data', 'r') as file:
+#         string = file.read()
+#         data = json.loads(string)
 
-def create_stats_embed(ctx):
-    """Return an embed for the stats menu."""
-    current_guild_id = ctx.guild.id
+#     user_data = data["SERVERS"][str(ctx.guild.id)]["user_data"]
+#     user_id = str(author.id)
 
-    if type(ctx) == discord.interactions.Interaction:
-        author = ctx.user
-    else:
-        author = ctx.author
+#     user_stats = user_data[user_id]
 
-    user_data = get_player_data_from_json_file(author, current_guild_id)
-
-    with open('data', 'r') as file:
-        string = file.read()
-        data = json.loads(string)
-
-    user_data = data["SERVERS"][str(ctx.guild.id)]["user_data"]
-    user_id = str(author.id)
-
-    user_stats = user_data[user_id]
-
-    stats_embed = discord.Embed(
-        title=f"{author.name}'s Overall Stats" ,
-        # colour orange
-        color=0xffa500
-    )
-    # {(str(count) + '. <@' + str(player['ID']) + '>') : <30}
-    stats_row_one = \
-        f'{"ELO: " + str(user_stats["ELO"]) : <40}' + "\t" + f'{"Wins: " + str(user_stats["Wins"]) : <40}' + "\t" + f'{"Losses: " + str(user_stats["Losses"]) : <40}'
-        # "ELO: " + str(user_stats["ELO"]) + "\n" + \
-        # "Wins: " + str(user_stats["Wins"]) + "\n" + \
-        # "Losses: " + str(user_stats["Losses"]) + "\n"
+#     stats_embed = discord.Embed(
+#         title=f"{author.name}'s Overall Stats" ,
+#         # colour orange
+#         color=0xffa500
+#     )
+#     # {(str(count) + '. <@' + str(player['ID']) + '>') : <30}
+#     stats_row_one = \
+#         f'{"ELO: " + str(user_stats["ELO"]) : <40}' + "\t" + f'{"Wins: " + str(user_stats["Wins"]) : <40}' + "\t" + f'{"Losses: " + str(user_stats["Losses"]) : <40}'
+#         # "ELO: " + str(user_stats["ELO"]) + "\n" + \
+#         # "Wins: " + str(user_stats["Wins"]) + "\n" + \
+#         # "Losses: " + str(user_stats["Losses"]) + "\n"
     
-    stats_row_two = \
-        f"{('Winstreak: ' + str(user_stats['Winstreak'])) : <5}" + "\t" + f'{"WLR: " + str(round(user_stats["Wins"] / max(1, (user_stats["Wins"] + user_stats["Losses"])) , 2)) + "%" : <40}' + "\t" + f'{"Games: " + str(user_stats["Wins"] + user_stats["Losses"]) : <40}'
+#     stats_row_two = \
+#         f"{('Winstreak: ' + str(user_stats['Winstreak'])) : <5}" + "\t" + f'{"WLR: " + str(round(user_stats["Wins"] / max(1, (user_stats["Wins"] + user_stats["Losses"])) , 2)) + "%" : <40}' + "\t" + f'{"Games: " + str(user_stats["Wins"] + user_stats["Losses"]) : <40}'
 
-    stats_embed.add_field(name=f"Season {str(data['SERVERS'][str(current_guild_id)]['current_season']['season'])} Statistics", value=stats_row_one, inline=True)
-    stats_embed.add_field(value=stats_row_two, name="", inline=False)
+#     stats_embed.add_field(name=f"Season {str(data['SERVERS'][str(current_guild_id)]['current_season']['season'])} Statistics", value=stats_row_one, inline=True)
+#     stats_embed.add_field(value=stats_row_two, name="", inline=False)
 
-    try:
-        stats_embed.set_thumbnail(url=author.avatar)
-    except Exception as e:
-        print(e)
-        print("Error getting user image embed.")
-    return stats_embed
+#     try:
+#         stats_embed.set_thumbnail(url=author.avatar)
+#     except Exception as e:
+#         print(e)
+#         print("Error getting user image embed.")
+#     return stats_embed
 
 
 ## END OF FUNCTIONS
@@ -1013,18 +994,18 @@ async def rules(interaction: discord.interactions.Interaction):
     await interaction.response.send_message(embed=rules_embed, ephemeral=True)
 
 
-@bot.tree.command(name = "stats", description = "Get your current season statistics")
-async def stats(interaction: discord.interactions.Interaction):
-    stats_embed = create_stats_embed(interaction)
+# @bot.tree.command(name = "stats", description = "Get your current season statistics")
+# async def stats(interaction: discord.interactions.Interaction):
+#     stats_embed = create_stats_embed(interaction)
 
-    await interaction.response.send_message(embed=stats_embed, ephemeral=True)
+#     await interaction.response.send_message(embed=stats_embed, ephemeral=True)
 
 
-@bot.tree.command(name = "maps", description = "View the maps currently in rotation")
-async def maps(interaction: discord.interactions.Interaction):
-    maps_embed = create_maps_embed(interaction)
+# @bot.tree.command(name = "maps", description = "View the maps currently in rotation")
+# async def maps(interaction: discord.interactions.Interaction):
+#     maps_embed = create_maps_embed(interaction)
 
-    await interaction.response.send_message(embed=maps_embed, ephemeral=True)
+#     await interaction.response.send_message(embed=maps_embed, ephemeral=True)
 
 
 ## END OF SLASH COMMANDS
@@ -1036,6 +1017,8 @@ async def maps(interaction: discord.interactions.Interaction):
 @bot.event
 async def on_ready():
     await bot.tree.sync()
+    await bot.load_extension('bot_commands.maps')
+    await bot.load_extension('bot_commands.stats')
     print('Bot is ready.')
     
 
@@ -1084,19 +1067,21 @@ async def rules(ctx: commands.Context):
     await ctx.send(embed=rules_embed)
 
 
+# @bot.command(name = "stats", description = "Get your current season statistics")
+# async def stats(ctx: commands.Context):
+#     stats_embed = create_stats_embed(ctx)
 
-@bot.command(name = "stats", description = "Get your current season statistics")
-async def stats(ctx: commands.Context):
-    stats_embed = create_stats_embed(ctx)
-
-    await ctx.send(embed=stats_embed)
+#     await ctx.send(embed=stats_embed)
 
 
-@bot.command(name = "maps", description = "View the maps currently in rotation")
-async def maps(ctx: commands.Context):
-    maps_embed = create_maps_embed(ctx)
+# @bot.command(name = "maps", description = "View the maps currently in rotation")
+# async def maps(ctx: commands.Context):
+#     maps_embed = create_maps_embed(ctx)
 
-    await ctx.send(embed=maps_embed)
+#     await ctx.send(embed=maps_embed)
+    
+
+# await bot.add_cog(maps(bot))
 
 
 @bot.command(name = "lb", description = "View the leaderboard for the current season")

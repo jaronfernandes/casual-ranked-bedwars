@@ -1,6 +1,6 @@
 import discord, os, json, random
 from datetime import date
-from entities.entities import Match, MatchMakeEmbed
+from entities import Match, MatchMakeEmbed
 
 
 games_running = {}
