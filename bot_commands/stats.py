@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import discord, os, json
-from data import get_player_data_from_json_file
+from data_access import get_player_data_from_json_file
 from datetime import date
 from discord.ext import commands
 from discord.ui import Button, button

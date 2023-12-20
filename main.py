@@ -233,163 +233,163 @@ players_in_game = {}
 ## FUNCTIONS
 
 
-def setup_guild_in_json_file(guild_id: int) -> None:
-    """Set up a guild in the data file.
+# def setup_guild_in_json_file(guild_id: int) -> None:
+#     """Set up a guild in the data file.
     
-    Preconditions:
-    - guild_id is a valid Discord guild ID.
-    """
-    with open("data", "r") as file:
-        string = file.read()
-        data = json.loads(string)
-        if str(guild_id) not in data["SERVERS"]:
-            data["SERVERS"][str(guild_id)] = {
-                "admin_roles_id": 123456789,
-                "scorer_roles_ids": 123456789,
-                "CONCURRENT_MATCH_LIMIT": 0,
-                "COUNT_TOP_KILLS": True,
-                "current_season": {
-                    "season": 1,
-                    "total_games_played": 0,
-                    "start_date": str(date.today()),
-                    "end_date": "N/A",
-                    "banned_items": ["Knockback Stick", "Pop-up Towers", "Obsidian", "Punch Bows"]
-                },
-                "games_played": 0,
-                "user_data": {},
-                "server_channels": {
-                    # "test_channel_ID": {
-                    #     "Name": "",
-                    #     "Colour": "000000"
-                    # }
-                },
-                "server_roles": {
-                    # "test_role_ID": {
-                    #     "Name": "",
-                    #     "Colour": "000000",
-                    #     "Position": 0
-                    # }
-                },
-                "previous_season_statistics": {
-                    # "1": {
-                    #     "user_data": {},
-                    #     "total_games_played": 0,
-                    #     "start_date": "01/01/1970",
-                    #     "end_date": "01/01/1970"
-                    # }
-                }
-            }
-            with open("data", "w") as jsonFile:
-                json.dump(data, jsonFile)
+#     Preconditions:
+#     - guild_id is a valid Discord guild ID.
+#     """
+#     with open("data", "r") as file:
+#         string = file.read()
+#         data = json.loads(string)
+#         if str(guild_id) not in data["SERVERS"]:
+#             data["SERVERS"][str(guild_id)] = {
+#                 "admin_roles_id": 123456789,
+#                 "scorer_roles_ids": 123456789,
+#                 "CONCURRENT_MATCH_LIMIT": 0,
+#                 "COUNT_TOP_KILLS": True,
+#                 "current_season": {
+#                     "season": 1,
+#                     "total_games_played": 0,
+#                     "start_date": str(date.today()),
+#                     "end_date": "N/A",
+#                     "banned_items": ["Knockback Stick", "Pop-up Towers", "Obsidian", "Punch Bows"]
+#                 },
+#                 "games_played": 0,
+#                 "user_data": {},
+#                 "server_channels": {
+#                     # "test_channel_ID": {
+#                     #     "Name": "",
+#                     #     "Colour": "000000"
+#                     # }
+#                 },
+#                 "server_roles": {
+#                     # "test_role_ID": {
+#                     #     "Name": "",
+#                     #     "Colour": "000000",
+#                     #     "Position": 0
+#                     # }
+#                 },
+#                 "previous_season_statistics": {
+#                     # "1": {
+#                     #     "user_data": {},
+#                     #     "total_games_played": 0,
+#                     #     "start_date": "01/01/1970",
+#                     #     "end_date": "01/01/1970"
+#                     # }
+#                 }
+#             }
+#             with open("data", "w") as jsonFile:
+#                 json.dump(data, jsonFile)
 
 
-def get_player_data_from_json_file(player, current_guild_id: int) -> dict:
-    """Return a dictionary of player data from a file.
+# def get_player_data_from_json_file(player, current_guild_id: int) -> dict:
+#     """Return a dictionary of player data from a file.
     
-    Preconditions:
-    - player is a valid Discord user (the author of the message, preferably).
-    """
-    player_name = player.name
-    player_id = str(player.id)
+#     Preconditions:
+#     - player is a valid Discord user (the author of the message, preferably).
+#     """
+#     player_name = player.name
+#     player_id = str(player.id)
 
-    with open(f"data", "r") as file:
-        string = file.read()
-        data = json.loads(string)
+#     with open(f"data", "r") as file:
+#         string = file.read()
+#         data = json.loads(string)
 
-        if str(current_guild_id) not in data["SERVERS"]:
-            setup_guild_in_json_file(current_guild_id)
-            print(f"Created new server {current_guild_id} in data file.")
-            with open(f"data", "r") as file:
-                string = file.read()
-                data = json.loads(string)
+#         if str(current_guild_id) not in data["SERVERS"]:
+#             setup_guild_in_json_file(current_guild_id)
+#             print(f"Created new server {current_guild_id} in data file.")
+#             with open(f"data", "r") as file:
+#                 string = file.read()
+#                 data = json.loads(string)
 
-        if player_id in data["SERVERS"][str(current_guild_id)]["user_data"]:
-            print(f"Returning data for player {player_name}")
-            return data["SERVERS"][str(current_guild_id)]["user_data"][player_id]
-        else:  # Add the player and new data to it.
-            new_data = {
-                "Name": player_name,
-                "Wins": 0,
-                "Losses": 0,
-                "Winstreak": 0,
-                "ELO": 0
-            }
+#         if player_id in data["SERVERS"][str(current_guild_id)]["user_data"]:
+#             print(f"Returning data for player {player_name}")
+#             return data["SERVERS"][str(current_guild_id)]["user_data"][player_id]
+#         else:  # Add the player and new data to it.
+#             new_data = {
+#                 "Name": player_name,
+#                 "Wins": 0,
+#                 "Losses": 0,
+#                 "Winstreak": 0,
+#                 "ELO": 0
+#             }
             
-            data["SERVERS"][str(current_guild_id)]["user_data"][player_id] = new_data
-            with open("data", "w") as jsonFile:
-                json.dump(data, jsonFile)
+#             data["SERVERS"][str(current_guild_id)]["user_data"][player_id] = new_data
+#             with open("data", "w") as jsonFile:
+#                 json.dump(data, jsonFile)
 
-            print(f"Created new data for player {player_name}")
-            return data["SERVERS"][str(current_guild_id)]["user_data"][player_id]
+#             print(f"Created new data for player {player_name}")
+#             return data["SERVERS"][str(current_guild_id)]["user_data"][player_id]
         
 
-def valid_for_matchmaking(player: str) -> bool:
-    """Return whether a player is valid for matchmaking.
+# def valid_for_matchmaking(player: str) -> bool:
+#     """Return whether a player is valid for matchmaking.
     
-    Preconditions:
-    - player is a valid Discord user (the author of the message, preferably).
-    """
-    return player not in players_in_game
+#     Preconditions:
+#     - player is a valid Discord user (the author of the message, preferably).
+#     """
+#     return player not in players_in_game
 
 
-def create_match(player, playerscurrent_guild_id: int, is_big_team_map: bool = False, randomize_match: bool = False, max_players: int = 2) -> Match:
-    """Return a new match.
+# def create_match(player, playerscurrent_guild_id: int, is_big_team_map: bool = False, randomize_match: bool = False, max_players: int = 2) -> Match:
+#     """Return a new match.
     
-    Preconditions:
-    - player is the player who is hosting the match (their user)
-    - len(players) == 2 or len(players) == 4 or len(players) == 6 or len(players) == 8
-    - playerscurrent_guild_id is the ID of the current guild.
-    """
-    host_data = get_player_data_from_json_file(player, playerscurrent_guild_id)
+#     Preconditions:
+#     - player is the player who is hosting the match (their user)
+#     - len(players) == 2 or len(players) == 4 or len(players) == 6 or len(players) == 8
+#     - playerscurrent_guild_id is the ID of the current guild.
+#     """
+#     host_data = get_player_data_from_json_file(player, playerscurrent_guild_id)
 
-    try:
-        with open("data", "r") as file:
-            string1 = file.read()
-            data = json.loads(string1)
-            games_played = data["SERVERS"][str(playerscurrent_guild_id)]["games_played"]
+#     try:
+#         with open("data", "r") as file:
+#             string1 = file.read()
+#             data = json.loads(string1)
+#             games_played = data["SERVERS"][str(playerscurrent_guild_id)]["games_played"]
 
-            match_id = games_played
+#             match_id = games_played
 
-            with open("data", "w") as jsonfile:
-                data["SERVERS"][str(playerscurrent_guild_id)]["games_played"] += 1
-                data["SERVERS"][str(playerscurrent_guild_id)]["current_season"]["total_games_played"] += 1
-                json.dump(data, jsonfile)
+#             with open("data", "w") as jsonfile:
+#                 data["SERVERS"][str(playerscurrent_guild_id)]["games_played"] += 1
+#                 data["SERVERS"][str(playerscurrent_guild_id)]["current_season"]["total_games_played"] += 1
+#                 json.dump(data, jsonfile)
 
-            todays_date = date.today()
-            players = {player.name: host_data["ELO"]}
-            # teams = matchmaking.matchmake(players, playerscurrent_guild_id)
+#             todays_date = date.today()
+#             players = {player.name: host_data["ELO"]}
+#             # teams = matchmaking.matchmake(players, playerscurrent_guild_id)
 
-            with open("maps", "r") as file:
-                # csv file
-                string2 = file.read()
-                maps = string2.split("\n")
+#             with open("maps", "r") as file:
+#                 # csv file
+#                 string2 = file.read()
+#                 maps = string2.split("\n")
 
-                if randomize_match:
-                    map = random.choice(maps)
-                else:
-                    map = "Any"
-                    print("The user may manually select their desired map.")
+#                 if randomize_match:
+#                     map = random.choice(maps)
+#                 else:
+#                     map = "Any"
+#                     print("The user may manually select their desired map.")
 
-                print(match_id, todays_date, players, map, is_big_team_map)
-                match_object = Match(match_id, todays_date, max_players, players, map, is_big_team_map, player)
-                games_running[match_id] = match_object
-                return match_object
-    except:
-        print("Error creating match.")
-        return None
+#                 print(match_id, todays_date, players, map, is_big_team_map)
+#                 match_object = Match(match_id, todays_date, max_players, players, map, is_big_team_map, player)
+#                 games_running[match_id] = match_object
+#                 return match_object
+#     except:
+#         print("Error creating match.")
+#         return None
     
 
-def handle_matchmaking(match: Match) -> bool:
-    """Handle matchmaking for a match.
+# def handle_matchmaking(match: Match) -> bool:
+#     """Handle matchmaking for a match.
     
-    Preconditions:
-    - match is a valid Match object.
-    """
-    if len(match.players) == match.max_players:
-        match.set_ready()
-        return True
+#     Preconditions:
+#     - match is a valid Match object.
+#     """
+#     if len(match.players) == match.max_players:
+#         match.set_ready()
+#         return True
     
-    return False
+#     return False
     
 
 def get_season_embed(current_guild: discord.Guild) -> discord.Embed:
@@ -565,378 +565,378 @@ def create_help_embed(ctx):
 
 ## UI CLASSES
     
-class RandomizeCaptains(discord.ui.View):
-    match: Match
-    has_interacted_with: bool
+# class RandomizeCaptains(discord.ui.View):
+#     match: Match
+#     has_interacted_with: bool
 
-    def __init__ (self, match: Match) -> None:
-        super().__init__()
-        self.has_interacted_with = False
-        self.match = match
+#     def __init__ (self, match: Match) -> None:
+#         super().__init__()
+#         self.has_interacted_with = False
+#         self.match = match
 
-    @button(label='Random', style=discord.ButtonStyle.primary, custom_id="randomize_button")
-    async def randomize_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if self.has_interacted_with:
-            await interaction.response.send_message('This message has expired!', ephemeral=True)
-            return
+#     @button(label='Random', style=discord.ButtonStyle.primary, custom_id="randomize_button")
+#     async def randomize_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+#         if self.has_interacted_with:
+#             await interaction.response.send_message('This message has expired!', ephemeral=True)
+#             return
         
-        self.has_interacted_with = True
+#         self.has_interacted_with = True
 
 
-        self.clear_items()
+#         self.clear_items()
 
-        self.match.set_randomized_captains()
-        new_view = JoinGame(self.match, interaction.user)
-        embedy = new_view.get_embed()
-        filey = new_view.get_file()
+#         self.match.set_randomized_captains()
+#         new_view = JoinGame(self.match, interaction.user)
+#         embedy = new_view.get_embed()
+#         filey = new_view.get_file()
 
-        await interaction.response.send_message(
-            '<@' + str(interaction.user.id) +'> is now hosting a match!', 
-            ephemeral=False, 
-            file=filey,
-            embed=embedy,
-            view=new_view)
+#         await interaction.response.send_message(
+#             '<@' + str(interaction.user.id) +'> is now hosting a match!', 
+#             ephemeral=False, 
+#             file=filey,
+#             embed=embedy,
+#             view=new_view)
 
-    @button(label='Highest ELO', style=discord.ButtonStyle.primary, custom_id="non_randomize_button")
-    async def non_randomize_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if self.has_interacted_with:
-            await interaction.response.send_message('This message has expired!', ephemeral=True)
-            return
+#     @button(label='Highest ELO', style=discord.ButtonStyle.primary, custom_id="non_randomize_button")
+#     async def non_randomize_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+#         if self.has_interacted_with:
+#             await interaction.response.send_message('This message has expired!', ephemeral=True)
+#             return
         
-        self.has_interacted_with = True
+#         self.has_interacted_with = True
 
-        self.clear_items()
+#         self.clear_items()
 
-        self.match.set_randomized_captains(False)
-        new_view = JoinGame(self.match, interaction.user)
-        embedy = new_view.get_embed()
-        filey = new_view.get_file()
+#         self.match.set_randomized_captains(False)
+#         new_view = JoinGame(self.match, interaction.user)
+#         embedy = new_view.get_embed()
+#         filey = new_view.get_file()
 
-        await interaction.response.send_message(
-            '<@' + str(interaction.user.id) +'> is now hosting a match!', 
-            ephemeral=False, 
-            file=filey,
-            embed=embedy,
-            view=new_view)
+#         await interaction.response.send_message(
+#             '<@' + str(interaction.user.id) +'> is now hosting a match!', 
+#             ephemeral=False, 
+#             file=filey,
+#             embed=embedy,
+#             view=new_view)
 
-    @button(label='Cancel Match', style=discord.ButtonStyle.danger, custom_id="cancel_button")
-    async def button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if self.has_interacted_with:
-            await interaction.response.send_message('This message has expired!', ephemeral=True)
-            return
+#     @button(label='Cancel Match', style=discord.ButtonStyle.danger, custom_id="cancel_button")
+#     async def button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+#         if self.has_interacted_with:
+#             await interaction.response.send_message('This message has expired!', ephemeral=True)
+#             return
         
-        self.has_interacted_with = True
+#         self.has_interacted_with = True
 
-        self.clear_items()
-        del players_in_game[interaction.user.name]
-        await interaction.response.send_message(content='You canceled the match!', view=self)
+#         self.clear_items()
+#         del players_in_game[interaction.user.name]
+#         await interaction.response.send_message(content='You canceled the match!', view=self)
     
-class RandomizeTeams(discord.ui.View):
-    match: Match
-    has_interacted_with: bool
+# class RandomizeTeams(discord.ui.View):
+#     match: Match
+#     has_interacted_with: bool
 
-    def __init__ (self, match: Match) -> None:
-        super().__init__()
-        self.has_interacted_with = False
-        self.match = match
+#     def __init__ (self, match: Match) -> None:
+#         super().__init__()
+#         self.has_interacted_with = False
+#         self.match = match
     
-    @button(label='Random', style=discord.ButtonStyle.primary, custom_id="randomize_button")
-    async def randomize_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if self.has_interacted_with:
-            await interaction.response.send_message('This message has expired!', ephemeral=True)
-            return
+#     @button(label='Random', style=discord.ButtonStyle.primary, custom_id="randomize_button")
+#     async def randomize_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+#         if self.has_interacted_with:
+#             await interaction.response.send_message('This message has expired!', ephemeral=True)
+#             return
         
-        self.has_interacted_with = True
+#         self.has_interacted_with = True
 
-        self.clear_items()
+#         self.clear_items()
 
-        self.match.set_randomized_teams()
-        new_view = JoinGame(self.match, interaction.user)
-        embedy = new_view.get_embed()
-        filey = new_view.get_file()
+#         self.match.set_randomized_teams()
+#         new_view = JoinGame(self.match, interaction.user)
+#         embedy = new_view.get_embed()
+#         filey = new_view.get_file()
 
-        await interaction.response.send_message(
-            '<@' + str(interaction.user.id) +'> is now hosting a match!', 
-            ephemeral=False, 
-            file=filey,
-            embed=embedy,
-            view=new_view)
+#         await interaction.response.send_message(
+#             '<@' + str(interaction.user.id) +'> is now hosting a match!', 
+#             ephemeral=False, 
+#             file=filey,
+#             embed=embedy,
+#             view=new_view)
                 
-    @button(label='Custom', style=discord.ButtonStyle.primary, custom_id="non_randomize_button")
-    async def non_randomize_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if self.has_interacted_with:
-            await interaction.response.send_message('This message has expired!', ephemeral=True)
-            return
+#     @button(label='Custom', style=discord.ButtonStyle.primary, custom_id="non_randomize_button")
+#     async def non_randomize_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+#         if self.has_interacted_with:
+#             await interaction.response.send_message('This message has expired!', ephemeral=True)
+#             return
         
-        self.has_interacted_with = True
+#         self.has_interacted_with = True
 
-        self.clear_items()
+#         self.clear_items()
 
-        self.match.set_randomized_teams(False)
-        new_view = RandomizeCaptains(self.match)
-        await interaction.response.edit_message(content='Do you want to randomize team captains?', view=new_view)
+#         self.match.set_randomized_teams(False)
+#         new_view = RandomizeCaptains(self.match)
+#         await interaction.response.edit_message(content='Do you want to randomize team captains?', view=new_view)
 
-    @button(label='Cancel Match', style=discord.ButtonStyle.danger, custom_id="cancel_button")
-    async def button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if self.has_interacted_with:
-            await interaction.response.send_message('This message has expired!', ephemeral=True)
-            return
+#     @button(label='Cancel Match', style=discord.ButtonStyle.danger, custom_id="cancel_button")
+#     async def button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+#         if self.has_interacted_with:
+#             await interaction.response.send_message('This message has expired!', ephemeral=True)
+#             return
         
-        self.has_interacted_with = True
+#         self.has_interacted_with = True
 
-        self.clear_items()
-        del players_in_game[interaction.user.name]
-        await interaction.response.send_message(content='You canceled the match!', view=self)
+#         self.clear_items()
+#         del players_in_game[interaction.user.name]
+#         await interaction.response.send_message(content='You canceled the match!', view=self)
 
-class RandomizeMap(discord.ui.View):
-    has_interacted_with: bool
-    max_players: int
+# class RandomizeMap(discord.ui.View):
+#     has_interacted_with: bool
+#     max_players: int
 
-    def __init__(self, max_players: int) -> None:
-        super().__init__()
-        self.has_interacted_with = False
-        self.max_players = max_players
+#     def __init__(self, max_players: int) -> None:
+#         super().__init__()
+#         self.has_interacted_with = False
+#         self.max_players = max_players
 
-    @button(label='Random', style=discord.ButtonStyle.primary, custom_id="randomize_button")
-    async def randomize_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if self.has_interacted_with:
-            await interaction.response.send_message('This message has expired!', ephemeral=True)
-            return
+#     @button(label='Random', style=discord.ButtonStyle.primary, custom_id="randomize_button")
+#     async def randomize_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+#         if self.has_interacted_with:
+#             await interaction.response.send_message('This message has expired!', ephemeral=True)
+#             return
         
-        self.has_interacted_with = True
+#         self.has_interacted_with = True
 
-        self.clear_items()
-        match = create_match(interaction.user, interaction.guild.id, False, True, self.max_players)
-        new_view = RandomizeTeams(match)
-        await interaction.response.edit_message(content='Do you want to randomize teams?', view=new_view)
+#         self.clear_items()
+#         match = create_match(interaction.user, interaction.guild.id, False, True, self.max_players)
+#         new_view = RandomizeTeams(match)
+#         await interaction.response.edit_message(content='Do you want to randomize teams?', view=new_view)
 
-    @button(label='Custom', style=discord.ButtonStyle.primary, custom_id="non_randomize_button")
-    async def non_randomize_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if self.has_interacted_with:
-            await interaction.response.send_message('This message has expired!', ephemeral=True)
-            return
+#     @button(label='Custom', style=discord.ButtonStyle.primary, custom_id="non_randomize_button")
+#     async def non_randomize_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+#         if self.has_interacted_with:
+#             await interaction.response.send_message('This message has expired!', ephemeral=True)
+#             return
         
-        self.has_interacted_with = True
+#         self.has_interacted_with = True
         
-        self.clear_items()
-        match = create_match(interaction.user, interaction.guild.id, False, False, self.max_players)
-        new_view = RandomizeTeams(match)
-        await interaction.response.edit_message(content='Do you want to randomize teams?', view=new_view)
+#         self.clear_items()
+#         match = create_match(interaction.user, interaction.guild.id, False, False, self.max_players)
+#         new_view = RandomizeTeams(match)
+#         await interaction.response.edit_message(content='Do you want to randomize teams?', view=new_view)
 
-    @button(label='Cancel Match', style=discord.ButtonStyle.danger, custom_id="cancel_button")
-    async def button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if self.has_interacted_with:
-            await interaction.response.send_message('This message has expired!', ephemeral=True)
-            return
+#     @button(label='Cancel Match', style=discord.ButtonStyle.danger, custom_id="cancel_button")
+#     async def button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+#         if self.has_interacted_with:
+#             await interaction.response.send_message('This message has expired!', ephemeral=True)
+#             return
         
-        self.has_interacted_with = True
+#         self.has_interacted_with = True
         
-        self.clear_items()
-        del players_in_game[interaction.user.name]
-        await interaction.response.send_message(content='You canceled the match!', view=self)
+#         self.clear_items()
+#         del players_in_game[interaction.user.name]
+#         await interaction.response.send_message(content='You canceled the match!', view=self)
 
 
-class UsingSmallerMaps(discord.ui.View):
-    has_interacted_with: bool
-    max_players: int
+# class UsingSmallerMaps(discord.ui.View):
+#     has_interacted_with: bool
+#     max_players: int
 
-    def __init__(self, max_players: int) -> None:
-        super().__init__()
-        self.has_interacted_with = False
-        self.max_players = max_players
+#     def __init__(self, max_players: int) -> None:
+#         super().__init__()
+#         self.has_interacted_with = False
+#         self.max_players = max_players
 
-    @button(label='Yes', style=discord.ButtonStyle.primary, custom_id="yes_button")
-    async def yes_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if self.has_interacted_with:
-            await interaction.response.send_message('This message has expired!', ephemeral=True)
-            return
+#     @button(label='Yes', style=discord.ButtonStyle.primary, custom_id="yes_button")
+#     async def yes_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+#         if self.has_interacted_with:
+#             await interaction.response.send_message('This message has expired!', ephemeral=True)
+#             return
         
-        self.has_interacted_with = True
+#         self.has_interacted_with = True
         
-        new_view = RandomizeMap(self.max_players)
-        self.clear_items()
-        await interaction.response.edit_message(content='Do you want to randomize your map?', view=new_view)
+#         new_view = RandomizeMap(self.max_players)
+#         self.clear_items()
+#         await interaction.response.edit_message(content='Do you want to randomize your map?', view=new_view)
 
-    @button(label='No', style=discord.ButtonStyle.primary, custom_id="no_button")
-    async def no_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if self.has_interacted_with:
-            await interaction.response.send_message('This message has expired!', ephemeral=True)
-            return
+#     @button(label='No', style=discord.ButtonStyle.primary, custom_id="no_button")
+#     async def no_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+#         if self.has_interacted_with:
+#             await interaction.response.send_message('This message has expired!', ephemeral=True)
+#             return
         
-        self.has_interacted_with = True
+#         self.has_interacted_with = True
         
-        new_view = RandomizeMap(self.max_players)
-        self.clear_items()
-        await interaction.response.edit_message(content='Do you want to randomize your map?', view=new_view)
+#         new_view = RandomizeMap(self.max_players)
+#         self.clear_items()
+#         await interaction.response.edit_message(content='Do you want to randomize your map?', view=new_view)
 
-    @button(label='Cancel Match', style=discord.ButtonStyle.danger, custom_id="cancel_button")
-    async def button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if self.has_interacted_with:
-            await interaction.response.send_message('This message has expired!', ephemeral=True)
-            return
+#     @button(label='Cancel Match', style=discord.ButtonStyle.danger, custom_id="cancel_button")
+#     async def button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+#         if self.has_interacted_with:
+#             await interaction.response.send_message('This message has expired!', ephemeral=True)
+#             return
         
-        self.has_interacted_with = True
+#         self.has_interacted_with = True
         
-        self.clear_items()
-        del players_in_game[interaction.user.name]
-        await interaction.response.edit_message(content='You canceled the match!', view=self)
+#         self.clear_items()
+#         del players_in_game[interaction.user.name]
+#         await interaction.response.edit_message(content='You canceled the match!', view=self)
 
 
-class CreateMatch(discord.ui.View):
-    host: discord.User
-    has_interacted_with: bool
+# class CreateMatch(discord.ui.View):
+#     host: discord.User
+#     has_interacted_with: bool
 
-    def __init__(self, host: discord.User) -> None:
-        super().__init__()
-        self.has_interacted_with = False
-        self.host = host
+#     def __init__(self, host: discord.User) -> None:
+#         super().__init__()
+#         self.has_interacted_with = False
+#         self.host = host
 
-    @button(label='2', style=discord.ButtonStyle.primary, custom_id="2_button")
-    async def second_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if self.host.id != interaction.user.id:
-            await interaction.response.send_message('You are not the host!', ephemeral=True)
-        else:
-            if self.has_interacted_with:
-                await interaction.response.send_message('This message has expired!', ephemeral=True)
-                return
+#     @button(label='2', style=discord.ButtonStyle.primary, custom_id="2_button")
+#     async def second_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+#         if self.host.id != interaction.user.id:
+#             await interaction.response.send_message('You are not the host!', ephemeral=True)
+#         else:
+#             if self.has_interacted_with:
+#                 await interaction.response.send_message('This message has expired!', ephemeral=True)
+#                 return
             
-            self.has_interacted_with = True
+#             self.has_interacted_with = True
         
-            new_view = UsingSmallerMaps(2)
-            # self.clear_items()
-            # await interaction.response.edit_message(content='Will you be using a 3s/4s map?', view=new_view)
-            await interaction.response.send_message('Will you be using a 3s/4s map?', ephemeral=True, view=new_view)
+#             new_view = UsingSmallerMaps(2)
+#             # self.clear_items()
+#             # await interaction.response.edit_message(content='Will you be using a 3s/4s map?', view=new_view)
+#             await interaction.response.send_message('Will you be using a 3s/4s map?', ephemeral=True, view=new_view)
 
         
-    @button(label='4', style=discord.ButtonStyle.primary, custom_id="4_button")
-    async def fourth_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if self.host.id != interaction.user.id:
-            await interaction.response.send_message('You are not the host!', ephemeral=True)
-        else:
-            if self.has_interacted_with:
-                await interaction.response.send_message('This message has expired!', ephemeral=True)
-                return
+#     @button(label='4', style=discord.ButtonStyle.primary, custom_id="4_button")
+#     async def fourth_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+#         if self.host.id != interaction.user.id:
+#             await interaction.response.send_message('You are not the host!', ephemeral=True)
+#         else:
+#             if self.has_interacted_with:
+#                 await interaction.response.send_message('This message has expired!', ephemeral=True)
+#                 return
         
-            self.has_interacted_with = True
+#             self.has_interacted_with = True
         
-            new_view = UsingSmallerMaps(4)
-            # self.clear_items()
-            # await interaction.response.edit_message(content='Will you be using a 3s/4s map?', view=new_view)
-            await interaction.response.send_message('Will you be using a 3s/4s map?', ephemeral=True, view=new_view)
+#             new_view = UsingSmallerMaps(4)
+#             # self.clear_items()
+#             # await interaction.response.edit_message(content='Will you be using a 3s/4s map?', view=new_view)
+#             await interaction.response.send_message('Will you be using a 3s/4s map?', ephemeral=True, view=new_view)
     
-    @button(label='6', style=discord.ButtonStyle.primary, custom_id="6_button")
-    async def sixth_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if self.host.id != interaction.user.id:
-            await interaction.response.send_message('You are not the host!', ephemeral=True)
-        else:
-            if self.has_interacted_with:
-                await interaction.response.send_message('This message has expired!', ephemeral=True)
-                return
+#     @button(label='6', style=discord.ButtonStyle.primary, custom_id="6_button")
+#     async def sixth_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+#         if self.host.id != interaction.user.id:
+#             await interaction.response.send_message('You are not the host!', ephemeral=True)
+#         else:
+#             if self.has_interacted_with:
+#                 await interaction.response.send_message('This message has expired!', ephemeral=True)
+#                 return
         
-            self.has_interacted_with = True
+#             self.has_interacted_with = True
         
         
-            new_view = RandomizeMap(6)
-            # self.clear_items()
-            # await interaction.response.edit_message(content='Do you want to randomize your map?', view=new_view)
-            await interaction.response.send_message('Do you want to randomize your map?', ephemeral=True, view=new_view)
+#             new_view = RandomizeMap(6)
+#             # self.clear_items()
+#             # await interaction.response.edit_message(content='Do you want to randomize your map?', view=new_view)
+#             await interaction.response.send_message('Do you want to randomize your map?', ephemeral=True, view=new_view)
 
-    @button(label='8', style=discord.ButtonStyle.primary, custom_id="8_button")
-    async def eighth_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if self.host.id != interaction.user.id:
-            await interaction.response.send_message('You are not the host!', ephemeral=True)
-        else:
-            if self.has_interacted_with:
-                await interaction.response.send_message('This message has expired!', ephemeral=True)
-                return
+#     @button(label='8', style=discord.ButtonStyle.primary, custom_id="8_button")
+#     async def eighth_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+#         if self.host.id != interaction.user.id:
+#             await interaction.response.send_message('You are not the host!', ephemeral=True)
+#         else:
+#             if self.has_interacted_with:
+#                 await interaction.response.send_message('This message has expired!', ephemeral=True)
+#                 return
         
-            self.has_interacted_with = True
-        
-
-            new_view = RandomizeMap(8)
-            # self.clear_items()
-            # await interaction.response.edit_message(content='Do you want to randomize your map?', view=new_view)
-            await interaction.response.send_message('Do you want to randomize your map?', ephemeral=True, view=new_view)
-
-    @button(label='Cancel Match', style=discord.ButtonStyle.danger, custom_id="cancel_button")
-    async def button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if self.host.id != interaction.user.id:
-            await interaction.response.send_message('You are not the host!', ephemeral=True)
-        else:
-            if self.has_interacted_with:
-                await interaction.response.send_message('This message has expired!', ephemeral=True)
-                return
-        
-            self.has_interacted_with = True
+#             self.has_interacted_with = True
         
 
-            del players_in_game[interaction.user.name]
-            self.clear_items()
-            await interaction.response.edit_message(content=interaction.user.name+' canceled the match!', view=self)
+#             new_view = RandomizeMap(8)
+#             # self.clear_items()
+#             # await interaction.response.edit_message(content='Do you want to randomize your map?', view=new_view)
+#             await interaction.response.send_message('Do you want to randomize your map?', ephemeral=True, view=new_view)
+
+#     @button(label='Cancel Match', style=discord.ButtonStyle.danger, custom_id="cancel_button")
+#     async def button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+#         if self.host.id != interaction.user.id:
+#             await interaction.response.send_message('You are not the host!', ephemeral=True)
+#         else:
+#             if self.has_interacted_with:
+#                 await interaction.response.send_message('This message has expired!', ephemeral=True)
+#                 return
+        
+#             self.has_interacted_with = True
+        
+
+#             del players_in_game[interaction.user.name]
+#             self.clear_items()
+#             await interaction.response.edit_message(content=interaction.user.name+' canceled the match!', view=self)
     
     
-class JoinGame(discord.ui.View):
-    """View for joining a game."""
-    matching_embed: MatchMakeEmbed
-    has_interacted_with: bool
+# class JoinGame(discord.ui.View):
+#     """View for joining a game."""
+#     matching_embed: MatchMakeEmbed
+#     has_interacted_with: bool
 
-    def __init__(self, match: Match, user: discord.User):
-        super().__init__()
-        self.has_interacted_with = False
-        self.matching_embed = MatchMakeEmbed(match, user)
+#     def __init__(self, match: Match, user: discord.User):
+#         super().__init__()
+#         self.has_interacted_with = False
+#         self.matching_embed = MatchMakeEmbed(match, user)
 
-    def get_embed(self) -> discord.Embed:
-        """Return the embed."""
-        return self.matching_embed.get_embed()
+#     def get_embed(self) -> discord.Embed:
+#         """Return the embed."""
+#         return self.matching_embed.get_embed()
     
-    def get_file(self) -> discord.File:
-        """Return the file."""
-        return self.matching_embed.get_file()
+#     def get_file(self) -> discord.File:
+#         """Return the file."""
+#         return self.matching_embed.get_file()
 
-    @button(label='Join', style=discord.ButtonStyle.primary, custom_id="join_button")
-    async def join_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if self.has_interacted_with:
-            await interaction.response.send_message('This message has expired!', ephemeral=True)
-            return
+#     @button(label='Join', style=discord.ButtonStyle.primary, custom_id="join_button")
+#     async def join_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+#         if self.has_interacted_with:
+#             await interaction.response.send_message('This message has expired!', ephemeral=True)
+#             return
         
-        if interaction.user.id == self.matching_embed.get_host().id:
-            await interaction.response.send_message('You can\'t join your own match!', ephemeral=True)
-        else:
-            players_in_game[interaction.user.name] = True
-            self.matching_embed.match.add_player(interaction.user.name, int(get_player_data_from_json_file(interaction.user, interaction.guild.id)["ELO"]))
-            self.matching_embed.update_new_player(interaction.user)
-            await interaction.response.send_message(interaction.user.name+' joined the match!', ephemeral=False)
+#         if interaction.user.id == self.matching_embed.get_host().id:
+#             await interaction.response.send_message('You can\'t join your own match!', ephemeral=True)
+#         else:
+#             players_in_game[interaction.user.name] = True
+#             self.matching_embed.match.add_player(interaction.user.name, int(get_player_data_from_json_file(interaction.user, interaction.guild.id)["ELO"]))
+#             self.matching_embed.update_new_player(interaction.user)
+#             await interaction.response.send_message(interaction.user.name+' joined the match!', ephemeral=False)
 
-    @button(label='Leave', style=discord.ButtonStyle.danger, custom_id="leave_button")
-    async def leave_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if self.has_interacted_with:
-            await interaction.response.send_message('This message has expired!', ephemeral=True)
-            return
+#     @button(label='Leave', style=discord.ButtonStyle.danger, custom_id="leave_button")
+#     async def leave_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+#         if self.has_interacted_with:
+#             await interaction.response.send_message('This message has expired!', ephemeral=True)
+#             return
         
-        if interaction.user.id == self.matching_embed.get_host().id:
-            await interaction.response.send_message('You can\'t leave your own match!', ephemeral=True)
-        else:
-            del players_in_game[interaction.user.name]
-            games_running[self.matching_embed.match.id].remove_player(interaction.user.name)
-            self.matching_embed.remove_player(interaction.user)
-            await interaction.response.send_message(interaction.user.name+' left the match!', ephemeral=False)
+#         if interaction.user.id == self.matching_embed.get_host().id:
+#             await interaction.response.send_message('You can\'t leave your own match!', ephemeral=True)
+#         else:
+#             del players_in_game[interaction.user.name]
+#             games_running[self.matching_embed.match.id].remove_player(interaction.user.name)
+#             self.matching_embed.remove_player(interaction.user)
+#             await interaction.response.send_message(interaction.user.name+' left the match!', ephemeral=False)
 
-    @button(label='Cancel', style=discord.ButtonStyle.danger, custom_id="cancel_match_button")
-    async def cancel_match(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if interaction.user.id != self.matching_embed.get_host().id:
-            await interaction.response.send_message('You are not the host!', ephemeral=True)
-        else:
-            if self.has_interacted_with:
-                await interaction.response.send_message('This message has expired!', ephemeral=True)
-                return
+#     @button(label='Cancel', style=discord.ButtonStyle.danger, custom_id="cancel_match_button")
+#     async def cancel_match(self, interaction: discord.Interaction, button: discord.ui.Button):
+#         if interaction.user.id != self.matching_embed.get_host().id:
+#             await interaction.response.send_message('You are not the host!', ephemeral=True)
+#         else:
+#             if self.has_interacted_with:
+#                 await interaction.response.send_message('This message has expired!', ephemeral=True)
+#                 return
         
-            self.has_interacted_with = True
+#             self.has_interacted_with = True
 
-            self.clear_items()
-            for player in self.matching_embed.match.players:
-                del players_in_game[player]
-            del games_running[self.matching_embed.match.id]
-            await interaction.response.send_message(content="<@" + str(interaction.user.id)+'> cancelled the match!', view=self)
+#             self.clear_items()
+#             for player in self.matching_embed.match.players:
+#                 del players_in_game[player]
+#             del games_running[self.matching_embed.match.id]
+#             await interaction.response.send_message(content="<@" + str(interaction.user.id)+'> cancelled the match!', view=self)
 
 
 ## END OF UI CLASSES
@@ -945,27 +945,27 @@ class JoinGame(discord.ui.View):
 ## SLASH COMMANDS
 
 
-@bot.tree.command(name = "commandname", description = "My first application Command")
-async def first_command(interaction):
-    await interaction.response.send_message("Hello!")
+# @bot.tree.command(name = "commandname", description = "My first application Command")
+# async def first_command(interaction):
+#     await interaction.response.send_message("Hello!")
 
 
-@bot.tree.command(name = "add", description = "Add (or retrieve) a user from data file.")
-async def retrieve_data(interaction):
-    data = get_player_data_from_json_file(interaction.user, interaction.guild.id)
-    await interaction.response.send_message(data)
+# @bot.tree.command(name = "add", description = "Add (or retrieve) a user from data file.")
+# async def retrieve_data(interaction):
+#     data = get_player_data_from_json_file(interaction.user, interaction.guild.id)
+#     await interaction.response.send_message(data)
 
 
-@bot.tree.command(name = "play", description = "Host a new game")
-async def retrieve_data(interaction: discord.interactions.Interaction):
-    # interaction.channel.send("Enter the amount of players you'd like to play with with (2,4,6,8).")
+# @bot.tree.command(name = "play", description = "Host a new game")
+# async def retrieve_data(interaction: discord.interactions.Interaction):
+#     # interaction.channel.send("Enter the amount of players you'd like to play with with (2,4,6,8).")
 
-    if valid_for_matchmaking(interaction.user.name):
-        players_in_game[interaction.user.name] = True
-        viewe = CreateMatch(interaction.user)
-        await interaction.response.send_message(content="Enter the amount of players you'd like to play with with (2,4,6,8).", view=viewe, ephemeral=True)
-    else:
-        await interaction.response.send_message(content='You\'re already in a game!', ephemeral=True)
+#     if valid_for_matchmaking(interaction.user.name):
+#         players_in_game[interaction.user.name] = True
+#         viewe = CreateMatch(interaction.user)
+#         await interaction.response.send_message(content="Enter the amount of players you'd like to play with with (2,4,6,8).", view=viewe, ephemeral=True)
+#     else:
+#         await interaction.response.send_message(content='You\'re already in a game!', ephemeral=True)
 
 
 @bot.tree.command(name = "queue", description = "View the queue for your current game")
@@ -1019,23 +1019,24 @@ async def on_ready():
     await bot.tree.sync()
     await bot.load_extension('bot_commands.maps')
     await bot.load_extension('bot_commands.stats')
+    await bot.load_extension('bot_commands.play')
     print('Bot is ready.')
     
 
-@bot.command(name = "add", description = "Add (or retrieve) a user from data file.")
-async def add(ctx: commands.Context):
-    get_player_data_from_json_file(ctx.author, ctx.guild.id)
-    await ctx.send(f"Added player {ctx.author.name} to the data file!")    
+# @bot.command(name = "add", description = "Add (or retrieve) a user from data file.")
+# async def add(ctx: commands.Context):
+#     get_player_data_from_json_file(ctx.author, ctx.guild.id)
+#     await ctx.send(f"Added player {ctx.author.name} to the data file!")    
 
 
-@bot.command(name = "play", description = "Start a new game")
-async def play(ctx: commands.Context):
-    if valid_for_matchmaking(ctx.author.name):
-        players_in_game[ctx.author.name] = True
-        viewe = CreateMatch(ctx.author)
-        await ctx.send(content="Enter the amount of players you'd like to play with with (2,4,6,8).", view=viewe)
-    else:
-        await ctx.send('You\'re already in a game!')
+# @bot.command(name = "play", description = "Start a new game")
+# async def play(ctx: commands.Context):
+#     if valid_for_matchmaking(ctx.author.name):
+#         players_in_game[ctx.author.name] = True
+#         viewe = CreateMatch(ctx.author)
+#         await ctx.send(content="Enter the amount of players you'd like to play with with (2,4,6,8).", view=viewe)
+#     else:
+#         await ctx.send('You\'re already in a game!')
 
 
 @bot.command(name = "games", description = "View all the current games running")
