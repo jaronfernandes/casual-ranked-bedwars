@@ -26,6 +26,8 @@ intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='!', intents=intents)
 bot.remove_command("help")
 bot.remove_command("stats")
+bot.remove_command("rules")
+bot.remove_command("season")
 
 
 """
@@ -47,187 +49,187 @@ bot.remove_command("stats")
 ## CLASSES
 
 
-class Match:
-    """Class for a ranked bedwars match.
+# class Match:
+#     """Class for a ranked bedwars match.
     
-    Instance Attributes:
-    - id: A unique identifier for the match.
-    - date: The date the match was played on.
-    - host: The host User of the match.
-    - max_players: The maximum number of players in the match.
-    - players: A dictionaries of players in the match along with their ELO.
-    - teams: A list of teams in the match.
-    - map: A string representing the map the match was played on.
-    - is_big_team_map: A boolean representing whether the map is a 3s/4s map.
-    - is_ready: A boolean representing whether the match is ready to be played.
-    - is_randomized_teams: A boolean representing whether the teams are randomized.
-    - is_randomized_captains: A boolean representing whether the captains are randomized.
-    """
-    id: int
-    date: str
-    host: discord.User
-    max_players: int = 2
-    players: dict[str: int]
-    teams: dict[str: list[str]]
-    map: str
-    is_big_team_map: bool
-    is_ready: bool
-    is_randomized_teams: bool
-    is_randomized_captains: bool
+#     Instance Attributes:
+#     - id: A unique identifier for the match.
+#     - date: The date the match was played on.
+#     - host: The host User of the match.
+#     - max_players: The maximum number of players in the match.
+#     - players: A dictionaries of players in the match along with their ELO.
+#     - teams: A list of teams in the match.
+#     - map: A string representing the map the match was played on.
+#     - is_big_team_map: A boolean representing whether the map is a 3s/4s map.
+#     - is_ready: A boolean representing whether the match is ready to be played.
+#     - is_randomized_teams: A boolean representing whether the teams are randomized.
+#     - is_randomized_captains: A boolean representing whether the captains are randomized.
+#     """
+#     id: int
+#     date: str
+#     host: discord.User
+#     max_players: int = 2
+#     players: dict[str: int]
+#     teams: dict[str: list[str]]
+#     map: str
+#     is_big_team_map: bool
+#     is_ready: bool
+#     is_randomized_teams: bool
+#     is_randomized_captains: bool
 
-    def __init__(self, id: int, date: str, max_players: int, players: dict[str: int], map: str, is_big_team_map: bool, host: discord.User) -> None:
-        """Initialize a new match."""
-        self.id = id
-        self.host = host
-        self.date = date
-        self.max_players = max_players
-        self.players = players
-        self.map = map
-        self.is_big_team_map = is_big_team_map
-        self.is_randomized_teams = False
-        self.is_randomized_captains = False
-        self.is_ready = False
+#     def __init__(self, id: int, date: str, max_players: int, players: dict[str: int], map: str, is_big_team_map: bool, host: discord.User) -> None:
+#         """Initialize a new match."""
+#         self.id = id
+#         self.host = host
+#         self.date = date
+#         self.max_players = max_players
+#         self.players = players
+#         self.map = map
+#         self.is_big_team_map = is_big_team_map
+#         self.is_randomized_teams = False
+#         self.is_randomized_captains = False
+#         self.is_ready = False
 
-    def get_id(self) -> int:
-        """Return the ID of the match."""
-        return self.id
+#     def get_id(self) -> int:
+#         """Return the ID of the match."""
+#         return self.id
     
-    def get_host(self) -> discord.User:
-        """Return the host of the match."""
-        return self.host
+#     def get_host(self) -> discord.User:
+#         """Return the host of the match."""
+#         return self.host
     
-    def get_max_players(self) -> int:
-        """Return the maximum number of players in the match."""
-        return self.max_players
+#     def get_max_players(self) -> int:
+#         """Return the maximum number of players in the match."""
+#         return self.max_players
     
-    def get_randomized_teams(self) -> bool:
-        """Return whether the match has randomized teams."""
-        return self.is_randomized_teams
+#     def get_randomized_teams(self) -> bool:
+#         """Return whether the match has randomized teams."""
+#         return self.is_randomized_teams
     
-    def get_randomized_captains(self) -> bool:
-        """Return whether the match has randomized captains."""
-        return self.is_randomized_captains
+#     def get_randomized_captains(self) -> bool:
+#         """Return whether the match has randomized captains."""
+#         return self.is_randomized_captains
 
-    def player_in_match(self, player: str) -> bool:
-        """Return whether player is in the match."""
-        return player in self.players
+#     def player_in_match(self, player: str) -> bool:
+#         """Return whether player is in the match."""
+#         return player in self.players
 
-    def add_player(self, player: str, player_elo: int) -> None:
-        """Add a player to the match.
+#     def add_player(self, player: str, player_elo: int) -> None:
+#         """Add a player to the match.
         
-        Preconditions: player not in self.players
-        """
-        players_in_game[player] = True
-        self.players[player] = player_elo
+#         Preconditions: player not in self.players
+#         """
+#         players_in_game[player] = True
+#         self.players[player] = player_elo
 
-    def remove_player(self, player: str) -> None:
-        """Remove a player from the match.
+#     def remove_player(self, player: str) -> None:
+#         """Remove a player from the match.
         
-        Preconditions: player in self.players
-        """
-        del players_in_game[player]
-        del self.players[player]
+#         Preconditions: player in self.players
+#         """
+#         del players_in_game[player]
+#         del self.players[player]
 
-    def set_teams(self, teams: dict[str, list[str]]) -> None:
-        """Set the teams of the match."""
-        self.teams = teams
+#     def set_teams(self, teams: dict[str, list[str]]) -> None:
+#         """Set the teams of the match."""
+#         self.teams = teams
 
-    def set_ready(self) -> None:
-        """Set the match to ready."""
-        self.is_ready = True
+#     def set_ready(self) -> None:
+#         """Set the match to ready."""
+#         self.is_ready = True
 
-    def set_randomized_teams(self, randomized_teams: bool = True) -> None:
-        """Set the match to have randomized teams."""
-        self.is_randomized_teams = randomized_teams
-        self.is_randomized_captains = randomized_teams
+#     def set_randomized_teams(self, randomized_teams: bool = True) -> None:
+#         """Set the match to have randomized teams."""
+#         self.is_randomized_teams = randomized_teams
+#         self.is_randomized_captains = randomized_teams
 
-    def set_randomized_captains(self, randomized_captains: bool = True) -> None:
-        """Set the match to have randomized captains."""
-        self.is_randomized_captains = randomized_captains
+#     def set_randomized_captains(self, randomized_captains: bool = True) -> None:
+#         """Set the match to have randomized captains."""
+#         self.is_randomized_captains = randomized_captains
     
-    def __str__(self) -> str:
-        """Return a string representation of this match."""
-        return f"Match ID {self.id} on {self.date} hosted by <@{self.host.id}> on {self.map}."
+#     def __str__(self) -> str:
+#         """Return a string representation of this match."""
+#         return f"Match ID {self.id} on {self.date} hosted by <@{self.host.id}> on {self.map}."
     
 
-class MatchMakeEmbed():
-    match: Match
-    title: str
-    players: list[discord.User]
-    img_file: discord.File
-    embed: discord.Embed
+# class MatchMakeEmbed():
+#     match: Match
+#     title: str
+#     players: list[discord.User]
+#     img_file: discord.File
+#     embed: discord.Embed
 
-    def __init__(self, match: Match, plr: discord.User):
-        super().__init__()
-        self.title = f"New Casual Ranked Bedwars Match {match.id}"
-        self.match = match
-        self.img_file = None
-        self.players = [plr]
-        self.embed = discord.Embed(
-            title=self.title, 
-            description=str(match),
-            color=0x00ff00
-        )
+#     def __init__(self, match: Match, plr: discord.User):
+#         super().__init__()
+#         self.title = f"New Casual Ranked Bedwars Match {match.id}"
+#         self.match = match
+#         self.img_file = None
+#         self.players = [plr]
+#         self.embed = discord.Embed(
+#             title=self.title, 
+#             description=str(match),
+#             color=0x00ff00
+#         )
 
-        self.embed.add_field(name="Players (" + str(len(self.players)) + "/" + str(self.match.get_max_players()) + ")", value=self._get_players_string(), inline=True)
+#         self.embed.add_field(name="Players (" + str(len(self.players)) + "/" + str(self.match.get_max_players()) + ")", value=self._get_players_string(), inline=True)
 
-        try:
-            file = discord.File("map_images/"+match.map+".png", filename=match.map+".png")
-            self.embed.set_image(url="attachment://" + file.filename)
-            self.img_file = file
-            print('embed set')
-        except:
-            print("No image found for map "+match.map+", using default instead.")
-            file = discord.File("map_images/hypixel.png", filename="hypixel.png")
-            self.embed.set_image(url="attachment://" + file.filename)
-            self.img_file = file
+#         try:
+#             file = discord.File("map_images/"+match.map+".png", filename=match.map+".png")
+#             self.embed.set_image(url="attachment://" + file.filename)
+#             self.img_file = file
+#             print('embed set')
+#         except:
+#             print("No image found for map "+match.map+", using default instead.")
+#             file = discord.File("map_images/hypixel.png", filename="hypixel.png")
+#             self.embed.set_image(url="attachment://" + file.filename)
+#             self.img_file = file
 
-        settings_str = \
-            "Randomized Teams: " + ("Enabled" if self.match.get_randomized_teams() else "Disabled") + "\n" + \
-            "Randomized Captains: " + ("Enabled" if self.match.get_randomized_captains() else "Disabled") + "\n" + \
-            "Max Players: " + str(self.match.get_max_players()) + "\n" 
+#         settings_str = \
+#             "Randomized Teams: " + ("Enabled" if self.match.get_randomized_teams() else "Disabled") + "\n" + \
+#             "Randomized Captains: " + ("Enabled" if self.match.get_randomized_captains() else "Disabled") + "\n" + \
+#             "Max Players: " + str(self.match.get_max_players()) + "\n" 
 
-        self.embed.add_field(name="Settings", value=settings_str, inline=True)
+#         self.embed.add_field(name="Settings", value=settings_str, inline=True)
 
-    def get_embed(self) -> discord.Embed:
-        """Return the embed."""
-        return self.embed
+#     def get_embed(self) -> discord.Embed:
+#         """Return the embed."""
+#         return self.embed
     
-    def get_file(self) -> discord.File:
-        """Return the file."""
-        return self.img_file
+#     def get_file(self) -> discord.File:
+#         """Return the file."""
+#         return self.img_file
     
-    def get_host(self) -> discord.User:
-        """Return the host."""
-        return self.match.get_host()
+#     def get_host(self) -> discord.User:
+#         """Return the host."""
+#         return self.match.get_host()
     
-    def _get_players_string(self) -> str:
-        """Return a string of players."""
-        plrs_str = ""
+#     def _get_players_string(self) -> str:
+#         """Return a string of players."""
+#         plrs_str = ""
         
-        for player in self.players:
-            plrs_str += "<@"+ str(player.id) + ">, "
+#         for player in self.players:
+#             plrs_str += "<@"+ str(player.id) + ">, "
 
-        plrs_str = plrs_str.removesuffix(", ")
+#         plrs_str = plrs_str.removesuffix(", ")
 
-        return plrs_str
+#         return plrs_str
     
-    def update_new_player(self, player: discord.User) -> None:
-        """Update the embed to include a new player."""
-        self.players.append(player)
-        self.embed.set_field_at(name="Players", value=self._get_players_string(), inline=True)
+#     def update_new_player(self, player: discord.User) -> None:
+#         """Update the embed to include a new player."""
+#         self.players.append(player)
+#         self.embed.set_field_at(name="Players", value=self._get_players_string(), inline=True)
 
-    def remove_player(self, player: discord.User) -> None:
-        """Remove a player from the embed."""
-        self.players.remove(player)
-        self.embed.set_field_at(name="Players", value=self._get_players_string(), inline=True)
-
-
-## GLOBAL VARIABLES
+#     def remove_player(self, player: discord.User) -> None:
+#         """Remove a player from the embed."""
+#         self.players.remove(player)
+#         self.embed.set_field_at(name="Players", value=self._get_players_string(), inline=True)
 
 
-games_running = {}
-players_in_game = {}
+# ## GLOBAL VARIABLES
+
+
+# games_running = {}
+# players_in_game = {}
 
 
 ## FUNCTIONS
@@ -392,126 +394,126 @@ players_in_game = {}
 #     return False
     
 
-def get_season_embed(current_guild: discord.Guild) -> discord.Embed:
-    """Return an embed for the current season.
+# def get_season_embed(current_guild: discord.Guild) -> discord.Embed:
+#     """Return an embed for the current season.
     
-    Preconditions:
-    - current_guild_id is the ID of the current guild.
-    """
-    current_guild_id = current_guild.id
+#     Preconditions:
+#     - current_guild_id is the ID of the current guild.
+#     """
+#     current_guild_id = current_guild.id
 
-    with open("data", "r") as file:
-        string = file.read()
-        data = json.loads(string)
+#     with open("data", "r") as file:
+#         string = file.read()
+#         data = json.loads(string)
 
-        if str(current_guild_id) not in data["SERVERS"]:
-            setup_guild_in_json_file(current_guild_id)
-            print(f"Created new server {current_guild_id} in data file.")
-            with open("data", "r") as file:
-                string = file.read()
-                data = json.loads(string)
+#         if str(current_guild_id) not in data["SERVERS"]:
+#             setup_guild_in_json_file(current_guild_id)
+#             print(f"Created new server {current_guild_id} in data file.")
+#             with open("data", "r") as file:
+#                 string = file.read()
+#                 data = json.loads(string)
 
-        current_season = data["SERVERS"][str(current_guild_id)]["current_season"]
-        season = current_season["season"]
-        start_date = current_season["start_date"]
-        end_date = current_season["end_date"]
-        banned_items = current_season["banned_items"]
+#         current_season = data["SERVERS"][str(current_guild_id)]["current_season"]
+#         season = current_season["season"]
+#         start_date = current_season["start_date"]
+#         end_date = current_season["end_date"]
+#         banned_items = current_season["banned_items"]
 
-        embed = discord.Embed(
-            title= current_guild.name + " | Season " + str(season),
-            description="Season " + str(season) + " started on " + start_date + (" and ended on " + end_date + "." if end_date != "N/A" else "."),
-            # aqua colour
-            color= 0x00ffff
-        )
+#         embed = discord.Embed(
+#             title= current_guild.name + " | Season " + str(season),
+#             description="Season " + str(season) + " started on " + start_date + (" and ended on " + end_date + "." if end_date != "N/A" else "."),
+#             # aqua colour
+#             color= 0x00ffff
+#         )
 
-        plrs = []
-        # get top players based on ELO below
-        for player in data["SERVERS"][str(current_guild_id)]["user_data"]:
-            plrs.append({
-                "ID": player,
-                "ELO": data["SERVERS"][str(current_guild_id)]["user_data"][player]["ELO"]
-                })
-        top_players = sorted(plrs, key=lambda k: k["ELO"], reverse=True)[:10]
-        top_players_str = ""
+#         plrs = []
+#         # get top players based on ELO below
+#         for player in data["SERVERS"][str(current_guild_id)]["user_data"]:
+#             plrs.append({
+#                 "ID": player,
+#                 "ELO": data["SERVERS"][str(current_guild_id)]["user_data"][player]["ELO"]
+#                 })
+#         top_players = sorted(plrs, key=lambda k: k["ELO"], reverse=True)[:10]
+#         top_players_str = ""
 
-        count = 1
+#         count = 1
 
-        for player in top_players:
-            top_players_str += f"{(str(count) + '. <@' + str(player['ID']) + '>') : <30}" + "\t ELO: " + str(player["ELO"]) + "\n"
-            count += 1
+#         for player in top_players:
+#             top_players_str += f"{(str(count) + '. <@' + str(player['ID']) + '>') : <30}" + "\t ELO: " + str(player["ELO"]) + "\n"
+#             count += 1
 
-        embed.add_field(name="Top Players", value=top_players_str, inline=False)
+#         embed.add_field(name="Top Players", value=top_players_str, inline=False)
 
-        embed.add_field(name="Banned Items", value=str("\n".join(banned_items)), inline=True)
+#         embed.add_field(name="Banned Items", value=str("\n".join(banned_items)), inline=True)
 
-        season_stats_str = \
-            "Total Matches: " + str(current_season["total_games_played"]) + "\n"
+#         season_stats_str = \
+#             "Total Matches: " + str(current_season["total_games_played"]) + "\n"
 
-        embed.add_field(name="Season Statistics", value=season_stats_str)
+#         embed.add_field(name="Season Statistics", value=season_stats_str)
 
-        try:
-            embed.set_thumbnail(url=current_guild.icon)
-        except Exception as e:
-            print(e)
-            print("Error getting guild image embed.")
+#         try:
+#             embed.set_thumbnail(url=current_guild.icon)
+#         except Exception as e:
+#             print(e)
+#             print("Error getting guild image embed.")
 
-        return embed
+#         return embed
     
     
-def create_rules_embed(ctx):
-    """Return an embed for the rules."""
-    rules_embed = discord.Embed(
-        title="Casual Ranked Bedwars Rules",
-        description="Basic Rules for Casual Ranked Bedwars games.",
-        # colour yellow
-        color=0xffff00
-    )
+# def create_rules_embed(ctx):
+#     """Return an embed for the rules."""
+#     rules_embed = discord.Embed(
+#         title="Casual Ranked Bedwars Rules",
+#         description="Basic Rules for Casual Ranked Bedwars games.",
+#         # colour yellow
+#         color=0xffff00
+#     )
     
-    # { name: "First Rusher:", value: "Gets 28-36 iron to buy blocks and bridges to mid and 2 stacks (sometimes a mix of 1, 2, and 3 stack in some cases", inline: true},
-    # { name: "Second Rusher:", value: "Gets a base of 12 gold to buy iron armour, and a quantity of iron to get blocks/tools/swords", inline: true},
-    # { name: "Third Rusher:", value: "Drops 15-25 iron to the defender. May also get iron armour, blocks/tools/swords, and other items (fireballs)", inline: true},
-    # { name: "Fourth Rusher:", value: "Gets 64 + 8 iron (or 4 gold and 48 iron) to buy an endstone/wood butterfly defense, and places it down. They then follow the others to mid.", inline: true},
+#     # { name: "First Rusher:", value: "Gets 28-36 iron to buy blocks and bridges to mid and 2 stacks (sometimes a mix of 1, 2, and 3 stack in some cases", inline: true},
+#     # { name: "Second Rusher:", value: "Gets a base of 12 gold to buy iron armour, and a quantity of iron to get blocks/tools/swords", inline: true},
+#     # { name: "Third Rusher:", value: "Drops 15-25 iron to the defender. May also get iron armour, blocks/tools/swords, and other items (fireballs)", inline: true},
+#     # { name: "Fourth Rusher:", value: "Gets 64 + 8 iron (or 4 gold and 48 iron) to buy an endstone/wood butterfly defense, and places it down. They then follow the others to mid.", inline: true},
     
-    rules_embed.add_field(name="First Rusher:", value="Gets 28-36 iron to buy blocks and bridges to mid and 2 stacks (sometimes a mix of 1, 2, and 3 stack in some cases", inline=False)
-    rules_embed.add_field(name="Second Rusher:", value="Gets a base of 12 gold to buy iron armour, and a quantity of iron to get blocks/tools/swords", inline=False)
-    rules_embed.add_field(name="Third Rusher:", value="Drops 15-25 iron to the defender. May also get iron armour, blocks/tools/swords, and other items (fireballs)", inline=False)
-    rules_embed.add_field(name="Fourth Rusher:", value="Gets 64 + 8 iron (or 4 gold and 48 iron) to buy an endstone/wood butterfly defense, and places it down. They then follow the others to mid.", inline=False)
+#     rules_embed.add_field(name="First Rusher:", value="Gets 28-36 iron to buy blocks and bridges to mid and 2 stacks (sometimes a mix of 1, 2, and 3 stack in some cases", inline=False)
+#     rules_embed.add_field(name="Second Rusher:", value="Gets a base of 12 gold to buy iron armour, and a quantity of iron to get blocks/tools/swords", inline=False)
+#     rules_embed.add_field(name="Third Rusher:", value="Drops 15-25 iron to the defender. May also get iron armour, blocks/tools/swords, and other items (fireballs)", inline=False)
+#     rules_embed.add_field(name="Fourth Rusher:", value="Gets 64 + 8 iron (or 4 gold and 48 iron) to buy an endstone/wood butterfly defense, and places it down. They then follow the others to mid.", inline=False)
 
-    try:
-        rules_embed.set_thumbnail(url=ctx.guild.icon)
-    except Exception as e:
-        print(e)
-        print("Error getting guild image embed.")
-    return rules_embed
+#     try:
+#         rules_embed.set_thumbnail(url=ctx.guild.icon)
+#     except Exception as e:
+#         print(e)
+#         print("Error getting guild image embed.")
+#     return rules_embed
 
 
-def create_help_embed(ctx):
-    """Return an embed for the help menu."""
-    help_embed = discord.Embed(
-        title="Casual Ranked Bedwars Help Menu",
-        description="Use Slash (/) Interactions or the prefix ! to execute commands.",
-        # colour white
-        color=0xffffff
-    )
+# def create_help_embed(ctx):
+#     """Return an embed for the help menu."""
+#     help_embed = discord.Embed(
+#         title="Casual Ranked Bedwars Help Menu",
+#         description="Use Slash (/) Interactions or the prefix ! to execute commands.",
+#         # colour white
+#         color=0xffffff
+#     )
 
-    help_embed.add_field(name="help", value="View the help menu.", inline=False)
-    help_embed.add_field(name="play", value="Start a new game.", inline=False)
-    help_embed.add_field(name="queue", value="View the queue for your current game.", inline=False)
-    help_embed.add_field(name="stats", value="Get your current season statistics.", inline=False)
-    help_embed.add_field(name="season", value="View the current season.", inline=False)
-    help_embed.add_field(name="rules", value="View the rules and instructions for Casual Ranked Bedwars.", inline=False)
-    help_embed.add_field(name="maps", value="View the maps currently in rotation.", inline=False)
-    help_embed.add_field(name="lb", value="View the leaderboard.", inline=False)
-    help_embed.add_field(name="winners", value="View the winners of the previous season.", inline=False)
-    help_embed.add_field(name="score", value="Score a game [ADMINS ONLY]", inline=False)
-    help_embed.add_field(name="reset-season", value="Reset the season to a new one [ADMINS ONLY]", inline=False)
+#     help_embed.add_field(name="help", value="View the help menu.", inline=False)
+#     help_embed.add_field(name="play", value="Start a new game.", inline=False)
+#     help_embed.add_field(name="queue", value="View the queue for your current game.", inline=False)
+#     help_embed.add_field(name="stats", value="Get your current season statistics.", inline=False)
+#     help_embed.add_field(name="season", value="View the current season.", inline=False)
+#     help_embed.add_field(name="rules", value="View the rules and instructions for Casual Ranked Bedwars.", inline=False)
+#     help_embed.add_field(name="maps", value="View the maps currently in rotation.", inline=False)
+#     help_embed.add_field(name="lb", value="View the leaderboard.", inline=False)
+#     help_embed.add_field(name="winners", value="View the winners of the previous season.", inline=False)
+#     help_embed.add_field(name="score", value="Score a game [ADMINS ONLY]", inline=False)
+#     help_embed.add_field(name="reset-season", value="Reset the season to a new one [ADMINS ONLY]", inline=False)
 
-    try:
-        help_embed.set_thumbnail(url=ctx.guild.icon)
-    except Exception as e:
-        print(e)
-        print("Error getting guild image embed.")
-    return help_embed
+#     try:
+#         help_embed.set_thumbnail(url=ctx.guild.icon)
+#     except Exception as e:
+#         print(e)
+#         print("Error getting guild image embed.")
+#     return help_embed
 
 
 # def create_stats_embed(ctx):
@@ -975,23 +977,23 @@ async def queue(interaction: discord.interactions.Interaction):
         await interaction.response.send_message(content=f"Match ID {match.id} on {match.date} hosted by <@{match.host.id}> on {match.map}.", ephemeral=True)
 
 
-@bot.tree.command(name = "season", description = "View the current season")
-async def season(interaction: discord.interactions.Interaction):
-    await interaction.response.send_message(content="The current season is season 1.", embed=get_season_embed(interaction.guild), ephemeral=True)
+# @bot.tree.command(name = "season", description = "View the current season")
+# async def season(interaction: discord.interactions.Interaction):
+#     await interaction.response.send_message(content="The current season is season 1.", embed=get_season_embed(interaction.guild), ephemeral=True)
 
 
-@bot.tree.command(name = "help", description = "View all the bot commands")
-async def help(interaction: discord.interactions.Interaction):
-    help_embed = create_help_embed(interaction)
+# # @bot.tree.command(name = "help", description = "View all the bot commands")
+# # async def help(interaction: discord.interactions.Interaction):
+# #     help_embed = create_help_embed(interaction)
 
-    await interaction.response.send_message(embed=help_embed, ephemeral=True)
+# #     await interaction.response.send_message(embed=help_embed, ephemeral=True)
 
 
-@bot.tree.command(name = "rules", description = "A basic overview of Casual Ranked Bedwars rushing strategies")
-async def rules(interaction: discord.interactions.Interaction):
-    rules_embed = create_rules_embed(interaction)
+# @bot.tree.command(name = "rules", description = "A basic overview of Casual Ranked Bedwars rushing strategies")
+# async def rules(interaction: discord.interactions.Interaction):
+#     rules_embed = create_rules_embed(interaction)
 
-    await interaction.response.send_message(embed=rules_embed, ephemeral=True)
+#     await interaction.response.send_message(embed=rules_embed, ephemeral=True)
 
 
 # @bot.tree.command(name = "stats", description = "Get your current season statistics")
@@ -1017,9 +1019,15 @@ async def rules(interaction: discord.interactions.Interaction):
 @bot.event
 async def on_ready():
     await bot.tree.sync()
-    await bot.load_extension('bot_commands.maps')
-    await bot.load_extension('bot_commands.stats')
-    await bot.load_extension('bot_commands.play')
+    # await bot.load_extension('bot_commands.maps')
+    # await bot.load_extension('bot_commands.stats')
+    # await bot.load_extension('bot_commands.play')
+
+    for file in os.listdir("bot_commands"):
+        if file.endswith(".py"):
+            await bot.load_extension(f"bot_commands.{file[:-3]}")
+            print(f"Loaded {file[:-3]}")
+
     print('Bot is ready.')
     
 
@@ -1039,59 +1047,60 @@ async def on_ready():
 #         await ctx.send('You\'re already in a game!')
 
 
-@bot.command(name = "games", description = "View all the current games running")
-async def games(ctx: commands.Context):
-    pass
+# @bot.command(name = "games", description = "View all the current games running")
+# async def games(ctx: commands.Context):
+#     pass
 
 
-@bot.command(name = "queue", description = "View the queue for your current game.")
-async def queue(ctx: commands.Context):
-    pass
+# @bot.command(name = "queue", description = "View the queue for your current game.")
+# async def queue(ctx: commands.Context):
+#     pass
 
 
-@bot.command(name = "season", description = "View the current season")
-async def season(ctx: commands.Context):
-    await ctx.send(embed=get_season_embed(ctx.guild))
+# @bot.command(name = "season", description = "View the current season")
+# async def season(ctx: commands.Context):
+#     await ctx.send(embed=get_season_embed(ctx.guild))
 
 
-@bot.command(name = "help", description = "View the help menu")
-async def help(ctx: commands.Context):
-    help_embed = create_help_embed(ctx)
+# # @bot.command(name = "help", description = "View the help menu")
+# # async def help(ctx: commands.Context):
+# #     help_embed = create_help_embed(ctx)
 
-    await ctx.send(embed=help_embed)
-
-
-@bot.command(name = "rules", description = "View the rules for Casual Ranked Bedwars")
-async def rules(ctx: commands.Context):
-    rules_embed = create_rules_embed(ctx)
-
-    await ctx.send(embed=rules_embed)
+# #     await ctx.send(embed=help_embed)
 
 
-# @bot.command(name = "stats", description = "Get your current season statistics")
-# async def stats(ctx: commands.Context):
-#     stats_embed = create_stats_embed(ctx)
+# @bot.command(name = "rules", description = "View the rules for Casual Ranked Bedwars")
+# async def rules(ctx: commands.Context):
+#     rules_embed = create_rules_embed(ctx)
 
-#     await ctx.send(embed=stats_embed)
+#     await ctx.send(embed=rules_embed)
 
 
-# @bot.command(name = "maps", description = "View the maps currently in rotation")
-# async def maps(ctx: commands.Context):
-#     maps_embed = create_maps_embed(ctx)
+# # @bot.command(name = "stats", description = "Get your current season statistics")
+# # async def stats(ctx: commands.Context):
+# #     stats_embed = create_stats_embed(ctx)
 
-#     await ctx.send(embed=maps_embed)
+# #     await ctx.send(embed=stats_embed)
+
+
+# # @bot.command(name = "maps", description = "View the maps currently in rotation")
+# # async def maps(ctx: commands.Context):
+# #     maps_embed = create_maps_embed(ctx)
+
+# #     await ctx.send(embed=maps_embed)
     
 
-# await bot.add_cog(maps(bot))
+# # await bot.add_cog(maps(bot))
 
 
-@bot.command(name = "lb", description = "View the leaderboard for the current season")
-async def lb(ctx: commands.Context):
-    pass
+# @bot.command(name = "lb", description = "View the leaderboard for the current season")
+# async def lb(ctx: commands.Context):
+#     pass
 
 
 @bot.event
 async def end():
+    print("oof")
     await bot.close()
 
 
