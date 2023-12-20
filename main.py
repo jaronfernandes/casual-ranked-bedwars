@@ -25,9 +25,6 @@ intents = discord.Intents.all()
 # intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 bot.remove_command("help")
-bot.remove_command("stats")
-bot.remove_command("rules")
-bot.remove_command("season")
 
 
 """
@@ -51,12 +48,12 @@ bot.remove_command("season")
 
 @bot.event
 async def on_ready():
-    await bot.tree.sync()
-
     for file in os.listdir("bot_commands"):
         if file.endswith(".py"):
             await bot.load_extension(f"bot_commands.{file[:-3]}")
             print(f"Loaded {file[:-3]}")
+
+    await bot.tree.sync()
 
     print('Bot is ready.')
     

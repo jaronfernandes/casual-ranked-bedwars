@@ -27,16 +27,16 @@ class Match:
     date: str
     host: discord.User
     max_players: int = 2
-    players: dict[str: int]
+    players: dict[discord.User: int]
     teams: dict[str: list[str]]
     map: str
-    players_in_game: dict[str: bool]
+    players_in_game: dict[discord.User: bool]
     is_big_team_map: bool
     is_ready: bool
     is_randomized_teams: bool
     is_randomized_captains: bool
 
-    def __init__(self, id: int, date: str, max_players: int, players: dict[str: int], map: str, is_big_team_map: bool, host: discord.User, players_in_game: dict[str: bool]) -> None:
+    def __init__(self, id: int, date: str, max_players: int, players: dict[discord.User: int], map: str, is_big_team_map: bool, host: discord.User, players_in_game: dict[str: bool]) -> None:
         """Initialize a new match."""
         self.id = id
         self.host = host
@@ -57,6 +57,14 @@ class Match:
     def get_host(self) -> discord.User:
         """Return the host of the match."""
         return self.host
+
+    def get_players(self) -> dict[discord.User: int]:
+        """Return the players in the match."""
+        return [player for player in self.players]
+    
+    def get_players_and_elo(self) -> dict[discord.User: int]:
+        """Return the players along with their ELO in the match."""
+        return self.players
     
     def get_max_players(self) -> int:
         """Return the maximum number of players in the match."""
@@ -70,11 +78,11 @@ class Match:
         """Return whether the match has randomized captains."""
         return self.is_randomized_captains
 
-    def player_in_match(self, player: str) -> bool:
+    def player_in_match(self, player: discord.User) -> bool:
         """Return whether player is in the match."""
         return player in self.players
 
-    def add_player(self, player: str, player_elo: int) -> None:
+    def add_player(self, player: discord.User, player_elo: int) -> None:
         """Add a player to the match.
         
         Preconditions: player not in self.players
@@ -82,7 +90,7 @@ class Match:
         self.players_in_game[player] = True
         self.players[player] = player_elo
 
-    def remove_player(self, player: str) -> None:
+    def remove_player(self, player: discord.User) -> None:
         """Remove a player from the match.
         
         Preconditions: player in self.players
@@ -119,12 +127,12 @@ class MatchMakeEmbed():
     img_file: discord.File
     embed: discord.Embed
 
-    def __init__(self, match: Match, plr: discord.User):
+    def __init__(self, match: Match):
         super().__init__()
         self.title = f"New Casual Ranked Bedwars Match {match.id}"
         self.match = match
         self.img_file = None
-        self.players = [plr]
+        self.players = self.match.get_players()
         self.embed = discord.Embed(
             title=self.title, 
             description=str(match),
@@ -173,13 +181,3 @@ class MatchMakeEmbed():
         plrs_str = plrs_str.removesuffix(", ")
 
         return plrs_str
-    
-    def update_new_player(self, player: discord.User) -> None:
-        """Update the embed to include a new player."""
-        self.players.append(player)
-        self.embed.set_field_at(name="Players", value=self._get_players_string(), inline=True)
-
-    def remove_player(self, player: discord.User) -> None:
-        """Remove a player from the embed."""
-        self.players.remove(player)
-        self.embed.set_field_at(name="Players", value=self._get_players_string(), inline=True)

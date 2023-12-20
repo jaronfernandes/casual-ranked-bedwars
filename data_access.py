@@ -332,7 +332,7 @@ class JoinGame(discord.ui.View):
     def __init__(self, match: Match, user: discord.User):
         super().__init__()
         self.has_interacted_with = False
-        self.matching_embed = MatchMakeEmbed(match, user)
+        self.matching_embed = MatchMakeEmbed(match)
 
     def get_embed(self) -> discord.Embed:
         """Return the embed."""
@@ -350,11 +350,16 @@ class JoinGame(discord.ui.View):
         
         if interaction.user.id == self.matching_embed.get_host().id:
             await interaction.response.send_message('You can\'t join your own match!', ephemeral=True)
+        elif interaction.user in self.matching_embed.match.players:
+            await interaction.response.send_message('You are already in this match!', ephemeral=True)
+        elif interaction.user.name in _players_in_game:
+            await interaction.response.send_message('You are already in a match!', ephemeral=True)
         else:
             _players_in_game[interaction.user.name] = True
-            self.matching_embed.match.add_player(interaction.user.name, int(get_player_data_from_json_file(interaction.user, interaction.guild.id)["ELO"]))
-            self.matching_embed.update_new_player(interaction.user)
-            await interaction.response.send_message(interaction.user.name+' joined the match!', ephemeral=False)
+            self.matching_embed.match.add_player(interaction.user, int(get_player_data_from_json_file(interaction.user, interaction.guild.id)["ELO"]))
+            self.matching_embed = MatchMakeEmbed(self.matching_embed.match)
+            await interaction.response.edit_message(content='<@' + str(interaction.user.id) +'> is now hosting a match!', embed=self.matching_embed.get_embed(), view=self)
+            # await interaction.response.send_message(interaction.user.name+' joined the match!', ephemeral=False)
 
     @button(label='Leave', style=discord.ButtonStyle.danger, custom_id="leave_button")
     async def leave_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -364,11 +369,16 @@ class JoinGame(discord.ui.View):
         
         if interaction.user.id == self.matching_embed.get_host().id:
             await interaction.response.send_message('You can\'t leave your own match!', ephemeral=True)
+        elif interaction.user.name not in _players_in_game:
+            await interaction.response.send_message('You are not in a match!', ephemeral=True)
+        elif interaction.user not in self.matching_embed.match.players:
+            await interaction.response.send_message('You are not in this match!', ephemeral=True)
         else:
             del _players_in_game[interaction.user.name]
-            _games_running[self.matching_embed.match.id].remove_player(interaction.user.name)
-            self.matching_embed.remove_player(interaction.user)
-            await interaction.response.send_message(interaction.user.name+' left the match!', ephemeral=False)
+            _games_running[self.matching_embed.match.id].remove_player(interaction.user)
+            self.matching_embed = MatchMakeEmbed(self.matching_embed.match)
+            await interaction.response.edit_message(content='<@' + str(interaction.user.id) +'> is now hosting a match!', embed=self.matching_embed.get_embed(), view=self)
+            # await interaction.response.send_message(interaction.user.name+' left the match!', ephemeral=False)
 
     @button(label='Cancel', style=discord.ButtonStyle.danger, custom_id="cancel_match_button")
     async def cancel_match(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -383,7 +393,7 @@ class JoinGame(discord.ui.View):
 
             self.clear_items()
             for player in self.matching_embed.match.players:
-                del _players_in_game[player]
+                del _players_in_game[player.name]
             del _games_running[self.matching_embed.match.id]
             await interaction.response.send_message(content="<@" + str(interaction.user.id)+'> cancelled the match!', view=self)
 
@@ -435,6 +445,34 @@ def setup_guild_in_json_file(guild_id: int) -> None:
                     #     "start_date": "01/01/1970",
                     #     "end_date": "01/01/1970"
                     # }
+                },
+                "elo_distribution": {
+                    [(0, "Stone", "aaaaaa", 35, -5, "N/A", 15, 10, 5), 
+                     (100, "Iron", "ffffff", 35, -10, "N/A", 15, 10, 5),
+                     (200, "Gold", "ffaa00", 30, -10, "N/A", 15, 10, 5),
+                     (300, "Diamond", "55ffff", 25, -15, "N/A", 10, 5, ""),
+                     (400, "Emerald", "00aa00", 25, -20, "N/A", 10, 5, ""),
+                     (500, "Sapphire", "00aaaa", 20, -20, "N/A", 10, 5, ""),
+                     (600, "Ruby", "aa0000", 15, -20, "N/A", 10, 5, ""),
+                     (700, "Crystal", "ff55ff", 15, -25, "N/A", 5, "", ""),
+                     (800, "Opal", "5555ff", 10, -25, "N/A", 5, "", ""),
+                     (900, "Amethyst", "aa00aa", 10, -30, "N/A", 5, "", ""),
+                     (1000, "Rainbow", "0000ff", 10, -30, "N/A", "", "", "")
+                     
+                     
+                     ]
+
+                    # 0,Stone,aaaaaa,35,-5,N/A,15,10,5
+                    # 100,Iron,ffffff,35,-10,N/A,15,10,5
+                    # 200,Gold,ffaa00,30,-10,N/A,15,10,5
+                    # 300,Diamond,55ffff,25,-15,N/A,10,5,
+                    # 400,Emerald,00aa00,25,-20,N/A,10,5
+                    # 500,Sapphire,00aaaa,20,-20,N/A,10,5
+                    # 600,Ruby,aa0000,15,-20,N/A,10,5
+                    # 700,Crystal,ff55ff,15,-25,N/A,5,,
+                    # 800,Opal,5555ff,10,-25,N/A,5,,
+                    # 900,Amethyst,aa00aa,10,-30,N/A,5,,
+                    # 1000,Rainbow,0000ff,10,-30,N/A,,,
                 }
             }
             with open("data", "w") as jsonFile:
@@ -514,7 +552,7 @@ def create_match(player, playerscurrent_guild_id: int, is_big_team_map: bool = F
                 json.dump(data, jsonfile)
 
             todays_date = date.today()
-            players = {player.name: host_data["ELO"]}
+            players = {player: host_data["ELO"]}
             # teams = matchmaking.matchmake(players, playerscurrent_guild_id)
 
             with open("maps", "r") as file:
@@ -536,6 +574,43 @@ def create_match(player, playerscurrent_guild_id: int, is_big_team_map: bool = F
         print("Error creating match.")
         print(e)
         return None
+    
+
+# def setup_elo_roles() -> bool:
+#     """Return a dictionary of the ELO distribution, from lowest to highest."""
+#     try:
+#         with open("elo-distribution.txt", 'r') as file:
+#             for line in file:
+#                 strs = line.split(",")
+#                 if strs[0] == "Level":
+#                     continue
+#                 # Check if the role already exists
+#                 if strs[5] != "N/A":
+
+#                 else:
+
+                    
+
+#             file.close()
+#     except Exception as e:
+#         print(e)
+#         print("Error getting ELO distribution from file; please make sure you've modified it appropriately.\n \
+#               If not, the original template can be retrieved from https://github.com/jaronfernandes/casual-ranked-bedwars.")
+#         return None
+    
+
+def get_elo_distribution(guild_id: int) -> list:
+    """Return a dictionary of the ELO distribution, from lowest to highest."""
+    try:
+        with open("data", 'r') as file:
+            string = file.read()
+            data = json.loads(string)
+            return data["SERVERS"][str(guild_id)]["elo_distribution"]
+    except Exception as e:
+        print(e)
+        print("Error occurred")
+        return None
+        
     
 
 def get_players_in_game() -> dict:
