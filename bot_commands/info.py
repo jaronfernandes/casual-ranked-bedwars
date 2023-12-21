@@ -53,7 +53,7 @@ class Info(commands.Cog):
         """Return an embed for the rules."""
         info_embed = discord.Embed(
             title="Casual Ranked Bedwars ELO",
-            description="ELO Distribution for Casual Ranked Bedwars games.",
+            description="ELO Distribution for Casual Ranked Bedwars games.\n1st, 2nd, and 3rd are the top 3 killers in the game.",
             # colour yellow
             color=0xffff00
         )
@@ -62,7 +62,7 @@ class Info(commands.Cog):
         for elo_key in elo_dict:
             # elo is a list of tuples
             # Generate code for a value string: Win: 30, Loss: 15, Top killer: , Second killer: , Third Killer: 
-            value_string = f'Win: {elo_dict[elo_key][2]} | Loss: {elo_dict[elo_key][3]} | Top killer: {elo_dict[elo_key][5]} | Second killer: {elo_dict[elo_key][6]} | Third killer: {elo_dict[elo_key][7]}'
+            value_string = f'<@&{elo_dict[elo_key][4]}> | Win: {elo_dict[elo_key][2]} | Loss: {elo_dict[elo_key][3]} | 1st: {elo_dict[elo_key][5]} | 2nd: {elo_dict[elo_key][6]} | 3rd: {elo_dict[elo_key][7]}'
             # NEED TO WORK ON THE BELOW ONCE SETUP_ELO_ROLES IS DONE.
             if elo_dict[elo_key][4] == "N/A" or all(elo_dict[elo_key][4] != str(role.id) for role in ctx.guild.roles):
                 admin_role = get_admin_role(ctx.guild.id)
@@ -72,7 +72,7 @@ class Info(commands.Cog):
                 else:
                     return "Not set up yet"
             else:
-                info_embed.add_field(name=f'{elo_dict[elo_key][0]}: {elo_key}', value=value_string, inline=False)
+                info_embed.add_field(name=f'{elo_dict[elo_key][0]}', value=value_string, inline=False)
 
         try:
             info_embed.set_thumbnail(url=ctx.guild.icon)
