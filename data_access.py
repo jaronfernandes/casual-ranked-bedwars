@@ -447,20 +447,17 @@ def setup_guild_in_json_file(guild_id: int) -> None:
                     # }
                 },
                 "elo_distribution": {
-                    [(0, "Stone", "aaaaaa", 35, -5, "N/A", 15, 10, 5), 
-                     (100, "Iron", "ffffff", 35, -10, "N/A", 15, 10, 5),
-                     (200, "Gold", "ffaa00", 30, -10, "N/A", 15, 10, 5),
-                     (300, "Diamond", "55ffff", 25, -15, "N/A", 10, 5, ""),
-                     (400, "Emerald", "00aa00", 25, -20, "N/A", 10, 5, ""),
-                     (500, "Sapphire", "00aaaa", 20, -20, "N/A", 10, 5, ""),
-                     (600, "Ruby", "aa0000", 15, -20, "N/A", 10, 5, ""),
-                     (700, "Crystal", "ff55ff", 15, -25, "N/A", 5, "", ""),
-                     (800, "Opal", "5555ff", 10, -25, "N/A", 5, "", ""),
-                     (900, "Amethyst", "aa00aa", 10, -30, "N/A", 5, "", ""),
-                     (1000, "Rainbow", "0000ff", 10, -30, "N/A", "", "", "")
-                     
-                     
-                     ]
+                    0: ("Stone", "aaaaaa", 35, -5, "N/A", 15, 10, 5), 
+                    100: ("Iron", "ffffff", 35, -10, "N/A", 15, 10, 5),
+                    200: ("Gold", "ffaa00", 30, -10, "N/A", 15, 10, 5),
+                    300: ("Diamond", "55ffff", 25, -15, "N/A", 10, 5, 0),
+                    400: ("Emerald", "00aa00", 25, -20, "N/A", 10, 5, 0),
+                    500: ("Sapphire", "00aaaa", 20, -20, "N/A", 10, 5, 0),
+                    600: ("Ruby", "aa0000", 15, -20, "N/A", 10, 5, 0),
+                    700: ("Crystal", "ff55ff", 15, -25, "N/A", 5, 0, 0),
+                    800: ("Opal", "5555ff", 10, -25, "N/A", 5, 0, 0),
+                    900: ("Amethyst", "aa00aa", 10, -30, "N/A", 5, 0, 0),
+                    1000: ("Rainbow", "0000ff", 10, -30, "N/A", 0, 0, 0)
 
                     # 0,Stone,aaaaaa,35,-5,N/A,15,10,5
                     # 100,Iron,ffffff,35,-10,N/A,15,10,5
@@ -576,43 +573,95 @@ def create_match(player, playerscurrent_guild_id: int, is_big_team_map: bool = F
         return None
     
 
-# def setup_elo_roles() -> bool:
-#     """Return a dictionary of the ELO distribution, from lowest to highest."""
-#     try:
-#         with open("elo-distribution.txt", 'r') as file:
-#             for line in file:
-#                 strs = line.split(",")
-#                 if strs[0] == "Level":
-#                     continue
-#                 # Check if the role already exists
-#                 if strs[5] != "N/A":
-
-#                 else:
-
-                    
-
-#             file.close()
-#     except Exception as e:
-#         print(e)
-#         print("Error getting ELO distribution from file; please make sure you've modified it appropriately.\n \
-#               If not, the original template can be retrieved from https://github.com/jaronfernandes/casual-ranked-bedwars.")
-#         return None
+def setup_elo_roles(guild_id: int) -> bool:
+    """Sets up the ELO roles in the server. Returns True if successful, False otherwise."""
+    try:
+        with open("elo-distribution.txt", 'r') as file:
+            for line in file:
+                strs = line.split(",")
+                if strs[0] == "Level":
+                    continue
+                # Check if the role already exists
+                if strs[5] != "N/A":
+                    # Check if the role exists
+                    pass
+                else:
+                    # Create the role
+                    pass
+            file.close()
+            return True
+    except Exception as e:
+        print(e)
+        print("Error getting ELO distribution from file; please make sure you've modified it appropriately.\n \
+              If not, the original template can be retrieved from https://github.com/jaronfernandes/casual-ranked-bedwars.")
+        return False
     
 
-def get_elo_distribution(guild_id: int) -> list:
+def get_elo_distribution(guild_id: int) -> dict:
     """Return a dictionary of the ELO distribution, from lowest to highest."""
     try:
         with open("data", 'r') as file:
             string = file.read()
             data = json.loads(string)
+            # check if guild exists
+            if str(guild_id) not in data["SERVERS"]:
+                setup_guild_in_json_file(guild_id)
+                print(f"Created new server {guild_id} in data file.")
+                with open("data", "r") as file:
+                    string = file.read()
+                    data = json.loads(string)
+
+            print(data["SERVERS"][str(guild_id)]["elo_distribution"])
+
             return data["SERVERS"][str(guild_id)]["elo_distribution"]
+    except Exception as e:
+        print(e)
+        print("Error occurred")
+        return None
+    
+
+def get_admin_role(guild_id: int) -> str:
+    """Return the admin role ID for a guild."""
+    try:
+        with open("data", 'r') as file:
+            string = file.read()
+            data = json.loads(string)
+            # check if guild exists
+            if str(guild_id) not in data["SERVERS"]:
+                setup_guild_in_json_file(guild_id)
+                print(f"Created new server {guild_id} in data file.")
+                with open("data", "r") as file:
+                    string = file.read()
+                    data = json.loads(string)
+
+            return data["SERVERS"][str(guild_id)]["admin_roles_id"]
+    except Exception as e:
+        print(e)
+        print("Error occurred")
+        return None
+    
+
+def get_scorer_roles(guild_id: int) -> str:
+    """Return the scorer roles ID for a guild."""
+    try:
+        with open("data", 'r') as file:
+            string = file.read()
+            data = json.loads(string)
+            # check if guild exists
+            if str(guild_id) not in data["SERVERS"]:
+                setup_guild_in_json_file(guild_id)
+                print(f"Created new server {guild_id} in data file.")
+                with open("data", "r") as file:
+                    string = file.read()
+                    data = json.loads(string)
+
+            return data["SERVERS"][str(guild_id)]["scorer_roles_ids"]
     except Exception as e:
         print(e)
         print("Error occurred")
         return None
         
     
-
 def get_players_in_game() -> dict:
     """Return a dictionary of players in game."""
     return _players_in_game
