@@ -1,0 +1,12 @@
+Level,RoleName,RoleColour,WinELO,LoseELO,role-ID,optional-first-killer,optional-second-killer,optional-third-killer
+0,Stone,aaaaaa,35,-5,N/A,15,10,5
+100,Iron,ffffff,35,-10,N/A,15,10,5
+200,Gold,ffaa00,30,-10,N/A,15,10,5
+300,Diamond,55ffff,25,-15,N/A,10,5,
+400,Emerald,00aa00,25,-20,N/A,10,5
+500,Sapphire,00aaaa,20,-20,N/A,10,5
+600,Ruby,aa0000,15,-20,N/A,10,5
+700,Crystal,ff55ff,15,-25,N/A,5,,
+800,Opal,5555ff,10,-25,N/A,5,,
+900,Amethyst,aa00aa,10,-30,N/A,5,,
+1000,Rainbow,0000ff,10,-30,N/A,,,
