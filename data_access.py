@@ -358,7 +358,7 @@ class JoinGame(discord.ui.View):
             _players_in_game[interaction.user.name] = True
             self.matching_embed.match.add_player(interaction.user, int(get_player_data_from_json_file(interaction.user, interaction.guild.id)["ELO"]))
             self.matching_embed = MatchMakeEmbed(self.matching_embed.match)
-            await interaction.response.edit_message(content='<@' + str(interaction.user.id) +'> is now hosting a match!', embed=self.matching_embed.get_embed(), view=self)
+            await interaction.response.edit_message(embed=self.matching_embed.get_embed(), view=self)
             # await interaction.response.send_message(interaction.user.name+' joined the match!', ephemeral=False)
 
     @button(label='Leave', style=discord.ButtonStyle.danger, custom_id="leave_button")
@@ -377,7 +377,7 @@ class JoinGame(discord.ui.View):
             del _players_in_game[interaction.user.name]
             _games_running[self.matching_embed.match.id].remove_player(interaction.user)
             self.matching_embed = MatchMakeEmbed(self.matching_embed.match)
-            await interaction.response.edit_message(content='<@' + str(interaction.user.id) +'> is now hosting a match!', embed=self.matching_embed.get_embed(), view=self)
+            await interaction.response.edit_message(embed=self.matching_embed.get_embed(), view=self)
             # await interaction.response.send_message(interaction.user.name+' left the match!', ephemeral=False)
 
     @button(label='Cancel', style=discord.ButtonStyle.danger, custom_id="cancel_match_button")
