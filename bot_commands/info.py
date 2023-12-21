@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from discord.ui import Button, button
 from typing import Optional, Union
+import asyncio
 from data_access import get_elo_distribution, get_admin_role, setup_elo_roles
 
 
@@ -20,13 +21,15 @@ class SetupELORoles(discord.ui.View):
         
         self.has_interacted_with = True
         self.clear_items()
-        if setup_elo_roles(interaction.guild.id):
-            await interaction.response.edit_message(content='Roles have been set up!', view=self)
+        await interaction.response.defer()
+        # await asyncio.sleep()
+        if await setup_elo_roles(interaction.guild):
+            await interaction.followup.send(content='Roles have been set up!', ephemeral=True)
+            # await interaction.response.edit_message(content='Roles have been set up!', view=self)
             return
         else:
-            await interaction.response.edit_message(
-                content='Roles failed to set up. Please fix your roles or try again. \
-                Otherwise, submit an issue to https://github.com/jaronfernandes/casual-ranked-bedwars', view=self)
+            await interaction.followup.send(content='Roles failed to set up. Please fix your roles or try again. \n\
+                Otherwise, submit an issue to https://github.com/jaronfernandes/casual-ranked-bedwars', ephemeral=True)
             return
         
 
@@ -61,16 +64,8 @@ class Info(commands.Cog):
             # Generate code for a value string: Win: 30, Loss: 15, Top killer: , Second killer: , Third Killer: 
             value_string = f'Win: {elo_dict[elo_key][2]} | Loss: {elo_dict[elo_key][3]} | Top killer: {elo_dict[elo_key][5]} | Second killer: {elo_dict[elo_key][6]} | Third killer: {elo_dict[elo_key][7]}'
             # NEED TO WORK ON THE BELOW ONCE SETUP_ELO_ROLES IS DONE.
-            print(elo_dict[elo_key][4])
-            print([role.id for role in ctx.guild.roles])
-            print(elo_dict[elo_key][4])
-            if elo_dict[elo_key][4] == "N/A" or all(elo_dict[elo_key][4] != role.id for role in ctx.guild.roles):
+            if elo_dict[elo_key][4] == "N/A" or all(elo_dict[elo_key][4] != str(role.id) for role in ctx.guild.roles):
                 admin_role = get_admin_role(ctx.guild.id)
-                print('hi')
-                print(ctx.author.guild_permissions.administrator)
-                print(admin_role)
-                print([role.id for role in ctx.author.roles])
-                print(admin_role in ctx.author.roles)
                 if ctx.author.guild_permissions.administrator or any(admin_role == role.id for role in ctx.author.roles):
                     print('hi2')
                     return "Setting up ELO roles"

@@ -573,32 +573,98 @@ def create_match(player, playerscurrent_guild_id: int, is_big_team_map: bool = F
         return None
     
 
-def setup_elo_roles(guild_id: int) -> bool:
-    """Sets up the ELO roles in the server. Returns True if successful, False otherwise."""
-    try:
-        with open("elo-distribution.txt", 'r') as file:
-            for line in file:
-                strs = line.split(",")
-                if strs[0] == "Level":
-                    continue
-                # Check if the role already exists
-                if strs[5] != "N/A":
-                    # Check if the role exists
-                    pass
+async def setup_elo_roles(guild: discord.Guild) -> bool:
+    """Sets up the ELO roles in the server (through the DATA FILE!). Returns True if successful, False otherwise."""
+    # try:
+    elo_distribution = get_elo_distribution(guild.id)
+    with open("elo-distribution.txt", 'r') as file:
+        file_cpy = ""
+
+        for line in file:
+            strs = line.split(",")
+            if strs[0] == "Level":
+                file_cpy += line
+                continue
+            # Check if the role already exists
+            if strs[5] != "N/A":
+                # Check if the role exists
+                if int(strs[5]) in [role.id for role in guild.roles]:
+                    # Update the role
+                    role = guild.get_role(int(strs[5]))
+                    # print(role.color.value, int(strs[2], 16))
+                    if role.colour.value != int(strs[2], 16):
+                        # Update the role colour
+                        await role.edit(colour=discord.Colour(int(strs[2], 16)))
                 else:
-                    # Create the role
-                    pass
-            file.close()
-            return True
-    except Exception as e:
-        print(e)
-        print("Error getting ELO distribution from file; please make sure you've modified it appropriately.\n \
-              If not, the original template can be retrieved from https://github.com/jaronfernandes/casual-ranked-bedwars.")
-        return False
+                    # Create the role and UPDATE the new txt file with the ID.
+                    role = await guild.create_role(name=strs[1], colour=discord.Colour(int(strs[2], 16)))
+            else:
+                # Create the role
+                role = await guild.create_role(name=strs[1], colour=discord.Colour(int(strs[2], 16)))
+
+            file_cpy += ",".join([strs[0], strs[1], strs[2], strs[3], strs[4], str(role.id), strs[6], strs[7], strs[8]])
+        # Update the file
+        file.close()
+
+        with open("elo-distribution.txt", 'w') as file:
+            file.write(file_cpy)
+
+        file.close()
+
+        setup_elo_distribution()
+        return True
+    # except Exception as e:
+    print(e)
+    print("Error getting ELO distribution from file; please make sure you've modified it appropriately.\n \
+            If not, the original template can be retrieved from https://github.com/jaronfernandes/casual-ranked-bedwars.")
+    return False
+
+
+def setup_elo_distribution() -> None:
+    """Set up the ELO distribution from the txt file."""
+    with open("data", 'r') as file:
+        string = file.read()
+        data = json.loads(string)
+        for guild_id in data["SERVERS"]:
+            elo_distribution = {}
+            with open("elo-distribution.txt", 'r') as file:
+                for line in file:
+                    strs = line.split(",")
+                    if strs[0] == "Level":
+                        continue
+                    elo_distribution[int(strs[0])] = (strs[1], strs[2], int(strs[3]), int(strs[4]), strs[5], int(strs[6]), int(strs[7]), int(strs[8]))
+                file.close()
+            data["SERVERS"][guild_id]["elo_distribution"] = elo_distribution
+            with open("data", "w") as jsonFile:
+                json.dump(data, jsonFile)
+            jsonFile.close()
+        file.close()
+
+
+async def delete_elo_roles(guild: discord.Guild) -> None:
+    """Delete the ELO roles from the server."""
+    with open("elo-distribution.txt", 'r') as file:
+
+        for line in file:
+            strs = line.split(",")
+            if strs[0] == "Level":
+                continue
+            # Check if the role already exists
+            if strs[5] != "N/A":
+                # Check if the role exists
+                if strs[5] in [role.id for role in guild.roles]:
+                    # Delete the role
+                    role = guild.get_role(strs[5])
+                    await role.delete()
+
+        # Update the file
+        file.close()
+
+        setup_elo_distribution()
     
 
 def get_elo_distribution(guild_id: int) -> dict:
-    """Return a dictionary of the ELO distribution, from lowest to highest."""
+    """Return a dictionary of the CURRENT ELO distribution from json file, NOT the txt file, from lowest to highest."""
     try:
         with open("data", 'r') as file:
             string = file.read()
@@ -610,8 +676,6 @@ def get_elo_distribution(guild_id: int) -> dict:
                 with open("data", "r") as file:
                     string = file.read()
                     data = json.loads(string)
-
-            print(data["SERVERS"][str(guild_id)]["elo_distribution"])
 
             return data["SERVERS"][str(guild_id)]["elo_distribution"]
     except Exception as e:
