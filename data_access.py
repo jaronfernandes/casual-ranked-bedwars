@@ -514,6 +514,30 @@ def get_player_data_from_json_file(player, current_guild_id: int) -> dict:
 
             print(f"Created new data for player {player_name}")
             return data["SERVERS"][str(current_guild_id)]["user_data"][player_id]
+
+
+def get_guild_data_from_json_file(guild_id: int) -> dict:
+    """Return a dictionary of guild data from a file.
+    
+    Preconditions:
+    - guild_id is a valid Discord guild ID.
+    """
+    try:
+        with open("data", "r") as file:
+            string = file.read()
+            data = json.loads(string)
+            # check if guild doesn't exist
+            if str(guild_id) not in data["SERVERS"]:
+                setup_guild_in_json_file(guild_id)
+                print(f"Created new server {guild_id} in data file.")
+                with open("data", "r") as file:
+                    string = file.read()
+                    data = json.loads(string)
+
+            return data["SERVERS"][str(guild_id)]
+    except Exception as e:
+        print(e)
+        print("Error getting guild data from file! Please submit an issue to https://github.com/jaronfernandes/casual-ranked-bedwars.")
         
 
 def valid_for_matchmaking(player: str) -> bool:
