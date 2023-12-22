@@ -12,8 +12,10 @@ class Leaderboard(commands.Cog):
 
     def create_leaderboard_embed(self, ctx, data, stats: discord.app_commands.Choice[str], page: int) -> discord.Embed:
         """Return an embed for this season's leaderboard."""
+        current_season = data["SERVERS"][str(ctx.guild.id)]["current_season"]['season']
+
         lb_embed = discord.Embed(
-            title=f"Leaderboard for {stats.name}",
+            title=f"Season {current_season} | {stats.name} Leaderboard",
             description=f"Page {page}",
             # colour magenta
             color=0xff00ff
