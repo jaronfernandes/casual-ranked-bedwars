@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import discord, os, json
-from data_access import get_player_data_from_json_file
+from data_access import get_player_data_from_json_file, get_guild_data_from_json_file
 from datetime import date
+from discord import app_commands
 from discord.ext import commands
 from discord.ui import Button, button
 from dotenv import load_dotenv
@@ -12,25 +13,27 @@ class Stats(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    def create_stats_embed(self, ctx):
+    def create_stats_embed(self, ctx, user: discord.Member = None) -> discord.Embed:
         """Return an embed for the stats menu."""
         current_guild_id = ctx.guild.id
 
-        if type(ctx) == discord.interactions.Interaction:
+        if user is not None:
+            if type(ctx) == discord.interactions.Interaction:
+                author = ctx.user
+            else:
+                author = ctx.author
+            if user.id != author.id:
+                author = user
+
+        elif type(ctx) == discord.interactions.Interaction:
             author = ctx.user
         else:
             author = ctx.author
 
-        user_data = get_player_data_from_json_file(author, current_guild_id)
+        print(author.name)
 
-        with open('data', 'r') as file:
-            string = file.read()
-            data = json.loads(string)
-
-        user_data = data["SERVERS"][str(ctx.guild.id)]["user_data"]
-        user_id = str(author.id)
-
-        user_stats = user_data[user_id]
+        data = get_guild_data_from_json_file(current_guild_id)
+        user_stats = get_player_data_from_json_file(author, current_guild_id)
 
         stats_embed = discord.Embed(
             title=f"{author.name}'s Overall Stats" ,
@@ -47,7 +50,7 @@ class Stats(commands.Cog):
         stats_row_two = \
             f"{('Winstreak: ' + str(user_stats['Winstreak'])) : <5}" + "\t" + f'{"WLR: " + str(round(user_stats["Wins"] / max(1, (user_stats["Wins"] + user_stats["Losses"])) , 2)) + "%" : <40}' + "\t" + f'{"Games: " + str(user_stats["Wins"] + user_stats["Losses"]) : <40}'
 
-        stats_embed.add_field(name=f"Season {str(data['SERVERS'][str(current_guild_id)]['current_season']['season'])} Statistics", value=stats_row_one, inline=True)
+        stats_embed.add_field(name=f"Season {str(data['current_season']['season'])} Statistics", value=stats_row_one, inline=True)
         stats_embed.add_field(value=stats_row_two, name="", inline=False)
 
         try:
@@ -58,9 +61,19 @@ class Stats(commands.Cog):
         return stats_embed
     
     @commands.hybrid_command(aliases = ['s', 'statistics'], brief = "stats [DISCORD USERNAME] (default yours)", description = "View your stats or another player's stats.")
-    async def stats(self, ctx):
-        """Display the map pool for the current season."""
-        await ctx.send(embed=self.create_stats_embed(ctx))
+    @app_commands.describe(username='Discord username of the player to view stats for.')
+    async def stats(self, ctx, username=None):
+        """Display the map pool for the current season."""        
+        if username is None:
+            await ctx.send(embed=self.create_stats_embed(ctx))
+            return
+        
+        member_to_get_stats = ctx.guild.get_member_named(username)
+        
+        if member_to_get_stats is None:
+            await ctx.send("Please enter a valid username from this server!")
+        else:
+            await ctx.send(embed=self.create_stats_embed(ctx, member_to_get_stats))
 
 async def setup(bot):
     await bot.add_cog(Stats(bot))
