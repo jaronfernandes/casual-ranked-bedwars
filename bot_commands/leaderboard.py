@@ -34,7 +34,7 @@ class Leaderboard(commands.Cog):
 
         top_players_str = ""
 
-        count = 1
+        count = 1 + 10 * (page - 1)
 
         for player in embed_field_value:
             top_players_str += f"{(str(count) + '. <@' + str(player) + '>') : <30}"
