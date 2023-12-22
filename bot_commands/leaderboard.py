@@ -34,25 +34,27 @@ class Leaderboard(commands.Cog):
         elif stats.value == "ws":
             embed_field_value = sorted(data["SERVERS"][str(guild_id)]["user_data"], key=lambda k: data["SERVERS"][str(guild_id)]["user_data"][k]["Winstreak"], reverse=True)[10 * (page - 1):10 * page]
 
-        top_players_str = ""
-
         count = 1 + 10 * (page - 1)
+        lb_embed.add_field(name="Top Players by " + stats.name, value="", inline=False)
 
         for player in embed_field_value:
-            top_players_str += f"{(str(count) + '. <@' + str(player) + '>') : <30}"
+            prefix = f'{str(count)}. <@{player}>'
             
             if stats.value == "elo":
-                top_players_str += "\t ELO: " + str(data["SERVERS"][str(guild_id)]["user_data"][player]["ELO"]) + "\n"
+                base = "ELO: " + str(data['SERVERS'][str(guild_id)]['user_data'][player]['ELO'])
             elif stats.value == "wins":
-                top_players_str += "\t Wins: " + str(data["SERVERS"][str(guild_id)]["user_data"][player]["Wins"]) + "\n"
+                base = "Wins: " + str(data['SERVERS'][str(guild_id)]['user_data'][player]['Wins'])
             elif stats.value == "wlr":
-                top_players_str += "\t W/L Ratio: " + str(data["SERVERS"][str(guild_id)]["user_data"][player]["Wins"] / max(1, data["SERVERS"][str(guild_id)]["user_data"][player]["Losses"])) + "\n"
+                base = "W/L Ratio: " + str(round(data['SERVERS'][str(guild_id)]['user_data'][player]['Wins'] / max(1, data['SERVERS'][str(guild_id)]['user_data'][player]['Losses']), 2))
             elif stats.value == "ws":
-                top_players_str += "\t Winstreak: " + str(data["SERVERS"][str(guild_id)]["user_data"][player]["Winstreak"]) + "\n"
+                base = "Winstreak: " + str(data['SERVERS'][str(guild_id)]['user_data'][player]['Winstreak'])
+
+            # invisible charcter for name below
+            lb_embed.add_field(name="", value=prefix, inline=True)
+            lb_embed.add_field(name="", value=base, inline=True)
+            lb_embed.add_field(name="", value="", inline=True)
 
             count += 1
-
-        lb_embed.add_field(name="Top Players", value=top_players_str, inline=False)
 
         try:
             lb_embed.set_thumbnail(url=ctx.guild.icon)
