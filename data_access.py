@@ -474,6 +474,7 @@ def setup_guild_in_json_file(guild_id: int) -> None:
             }
             with open("data", "w") as jsonFile:
                 json.dump(data, jsonFile)
+                # setup_elo_roles(guild_id)
 
 
 def get_player_data_from_json_file(player, current_guild_id: int) -> dict:
@@ -495,6 +496,19 @@ def get_player_data_from_json_file(player, current_guild_id: int) -> dict:
             with open(f"data", "r") as file:
                 string = file.read()
                 data = json.loads(string)
+
+            # FUTURE CODE FOR SCORING A USER FOR THE FIRST TIME.    
+
+            # elo_dict = get_elo_distribution(current_guild_id)
+            # # convert each key to an integer, and then sort
+            # lowest_role = sorted([int(key) for key in elo_dict])[0]
+            # if all(lowest_role.id != role.id for role in player.roles):
+            #     # Give the player the lowest role
+            #     # Only have guild id. Need to get the guild object from it! and bot.get_guild doesn't work since we're in the wrong file!
+            #     guild = discord.utils.get(player.guilds, id=current_guild_id)
+            #     role = await guild.get_role(lowest_role.id)
+            #     await player.add_roles(role)
+
 
         if player_id in data["SERVERS"][str(current_guild_id)]["user_data"]:
             print(f"Returning data for player {player_name}")
