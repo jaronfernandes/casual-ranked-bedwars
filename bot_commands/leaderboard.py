@@ -3,7 +3,7 @@ import json
 import math
 from discord import app_commands
 from discord.ext import commands
-from data_access import setup_guild_in_json_file
+from data_access import get_guild_data_from_json_file
 
 
 class Leaderboard(commands.Cog):
@@ -12,7 +12,7 @@ class Leaderboard(commands.Cog):
 
     def create_leaderboard_embed(self, ctx, data, stats: discord.app_commands.Choice[str], page: int) -> discord.Embed:
         """Return an embed for this season's leaderboard."""
-        current_season = data["SERVERS"][str(ctx.guild.id)]["current_season"]['season']
+        current_season = data["current_season"]['season']
 
         lb_embed = discord.Embed(
             title=f"Season {current_season} | {stats.name} Leaderboard",
@@ -26,13 +26,13 @@ class Leaderboard(commands.Cog):
         embed_field_value = ""
 
         if stats.value == "elo":
-            embed_field_value = sorted(data["SERVERS"][str(guild_id)]["user_data"], key=lambda k: data["SERVERS"][str(guild_id)]["user_data"][k]["ELO"], reverse=True)[10 * (page - 1):10 * page]
+            embed_field_value = sorted(data["user_data"], key=lambda k: data["user_data"][k]["ELO"], reverse=True)[10 * (page - 1):10 * page]
         elif stats.value == "wins":
-            embed_field_value = sorted(data["SERVERS"][str(guild_id)]["user_data"], key=lambda k: data["SERVERS"][str(guild_id)]["user_data"][k]["Wins"], reverse=True)[10 * (page - 1):10 * page]
+            embed_field_value = sorted(data["user_data"], key=lambda k: data["user_data"][k]["Wins"], reverse=True)[10 * (page - 1):10 * page]
         elif stats.value == "wlr":
-            embed_field_value = sorted(data["SERVERS"][str(guild_id)]["user_data"], key=lambda k: data["SERVERS"][str(guild_id)]["user_data"][k]["Wins"] / max(1, data["SERVERS"][str(guild_id)]["user_data"][k]["Losses"]), reverse=True)[10 * (page - 1):10 * page]
+            embed_field_value = sorted(data["user_data"], key=lambda k: data["user_data"][k]["Wins"] / max(1, data["user_data"][k]["Losses"]), reverse=True)[10 * (page - 1):10 * page]
         elif stats.value == "ws":
-            embed_field_value = sorted(data["SERVERS"][str(guild_id)]["user_data"], key=lambda k: data["SERVERS"][str(guild_id)]["user_data"][k]["Winstreak"], reverse=True)[10 * (page - 1):10 * page]
+            embed_field_value = sorted(data["user_data"], key=lambda k: data["user_data"][k]["Winstreak"], reverse=True)[10 * (page - 1):10 * page]
 
         count = 1 + 10 * (page - 1)
         lb_embed.add_field(name="Top Players by " + stats.name, value="", inline=False)
@@ -41,13 +41,13 @@ class Leaderboard(commands.Cog):
             prefix = f'{str(count)}. <@{player}>'
             
             if stats.value == "elo":
-                base = "ELO: " + str(data['SERVERS'][str(guild_id)]['user_data'][player]['ELO'])
+                base = "ELO: " + str(data['user_data'][player]['ELO'])
             elif stats.value == "wins":
-                base = "Wins: " + str(data['SERVERS'][str(guild_id)]['user_data'][player]['Wins'])
+                base = "Wins: " + str(data['user_data'][player]['Wins'])
             elif stats.value == "wlr":
-                base = "W/L Ratio: " + str(round(data['SERVERS'][str(guild_id)]['user_data'][player]['Wins'] / max(1, data['SERVERS'][str(guild_id)]['user_data'][player]['Losses']), 2))
+                base = "W/L Ratio: " + str(round(data['user_data'][player]['Wins'] / max(1, data['user_data'][player]['Losses']), 2))
             elif stats.value == "ws":
-                base = "Winstreak: " + str(data['SERVERS'][str(guild_id)]['user_data'][player]['Winstreak'])
+                base = "Winstreak: " + str(data['user_data'][player]['Winstreak'])
 
             # invisible charcter for name below
             lb_embed.add_field(name="", value=prefix, inline=True)
@@ -76,19 +76,10 @@ class Leaderboard(commands.Cog):
         """Display the map pool for the current season."""
         guild_id = ctx.guild.id
 
-        with open("data", "r") as file:
-            string = file.read()
-            data = json.loads(string)
-
-            if str(guild_id) not in data["SERVERS"]:
-                setup_guild_in_json_file(guild_id)
-                print(f"Created new server {guild_id} in data file.")
-                with open("data", "r") as file:
-                    string = file.read()
-                    data = json.loads(string)
+        data = get_guild_data_from_json_file(ctx.guild.id)
                     
         # Check if there are enough users for the page number.
-        total_pages = math.ceil(len(data["SERVERS"][str(guild_id)]["user_data"]) / 10)
+        total_pages = math.ceil(len(data["user_data"]) / 10)
         if total_pages == 0:
             await ctx.send("There are no users in the database!")
         elif page > total_pages or page < 1:
