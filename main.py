@@ -14,10 +14,9 @@ import random
 from datetime import date
 from discord.ext import commands
 from discord.ui import Button, button
-from dotenv import load_dotenv
-import matchmaking
+# from dotenv import load_dotenv
 
-load_dotenv()
+# load_dotenv()
 
 BOT_TOKEN = os.getenv('TOKEN')
 
@@ -926,8 +925,6 @@ async def rules(interaction: discord.interactions.Interaction):
 
 
 ## EVENTS
-
-
 @bot.event
 async def on_ready():
     await bot.tree.sync()
