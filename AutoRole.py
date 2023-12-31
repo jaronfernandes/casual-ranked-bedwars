@@ -14,10 +14,9 @@ class AutoRole(commands.Cog):
     bot: commands.Bot
     SCOPES: list[str] = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
     SPREADSHEET_ID = "1TJzireUkllZVZ9kESgozudSzlJkZbCtQVGVh8xpyL5M"
-    column_start = 0
-    column_end = 0
-    row_start = 0
-    row_end = 0
+    member_range: str = "A:A"
+    role_range: str = "B:B"
+    sheet_name = "Sheet1"
 
     def __init__(self, bot, spreadsheet_link):
         self.bot = bot
@@ -32,24 +31,25 @@ class AutoRole(commands.Cog):
 
     def _get_member_roles(self) -> dict[discord.Member, discord.Role]:
         spreadsheet_data = self._read_spreadsheet()
+        members = self._read_spreadsheet(self.member_range)[1:]
+        roles = self._read_spreadsheet(self.member_range)[1:]
+
         member_roles = {}
-        for member_name in member_role_names:
-            member = self.find_member(member_name);
-            role = self.find_role(member_role_names[member_name])
+        for i in range(len(members)):
+            member = self.find_member(members[i][0])
+            role = self.find_role(roles[i][0])
             member_roles[member] = role
 
         return member_roles
 
-    def _read_spreadsheet(self) -> list[list[str]]:
+    def _read_spreadsheet(self, spreadsheet_range: str) -> list[list[str]]:
         # Get credentials.
         credentials = self._read_credentials()
 
         # Call API.
-
         try:
             service = build("sheets", "v4", credentials=credentials)
             spreadsheet = service.spreadsheets()
-            spreadsheet_range = self._get_spreadsheet_range()
             result = (
                 spreadsheet.values()
                 .get(spreadsheetId=self.SPREADSHEET_ID, range=spreadsheet_range)
@@ -61,6 +61,7 @@ class AutoRole(commands.Cog):
             if not values:
                 print("No data found.")
             else:
+                print(values)
                 return values
 
         except HttpError as e:
@@ -85,18 +86,13 @@ class AutoRole(commands.Cog):
             with open("token.json", "w") as token:
                 token.write(creds.to_json())
 
-            return creds
+        return creds
 
-    def _get_spreadsheet_range(self) -> str:
-        row_start = self.row_start
-        row_end = self.row_end
+    def _get_member_range(self) -> str:
+        return f"{self.sheet_name}!{self.role_range}"
 
-        if self.row_start == -1:
-            row_start = ""
-        if self.row_end == -1:
-            row_end = ""
-
-        return f"Class Data!{self.column_start}{row_start}:{self.column_end}{row_end}"
+    def _get_role_range(self) -> str:
+        return f"{self.sheet_name}!{self.role_range}"
 
     def find_role(self, role_name: str) -> discord.Role:
         return
