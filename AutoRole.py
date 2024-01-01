@@ -23,21 +23,24 @@ class AutoRole(commands.Cog):
         self.spreadsheet_link = spreadsheet_link
 
     @commands.command()
-    async def assign_roles(self, ctx):
-        member_roles = self._get_member_roles()
+    async def assign_roles(self, ctx: commands.Context):
+        guild = ctx.guild
+        member_roles = self._get_member_roles(guild)
         for member in member_roles:
             await member.add_roles(member_roles[member])
             print(f"Added role to {member.name}")
 
-    def _get_member_roles(self) -> dict[discord.Member, discord.Role]:
-        spreadsheet_data = self._read_spreadsheet()
-        members = self._read_spreadsheet(self.member_range)[1:]
-        roles = self._read_spreadsheet(self.member_range)[1:]
+    def _get_member_roles(self, guild: discord.Guild) -> dict[discord.Member, discord.Role]:
+        member_names = self._read_spreadsheet(self.member_range)[1:]
+        role_names = self._read_spreadsheet(self.member_range)[1:]
+
+        members = list(guild.members)
+        roles = list(guild.roles)
 
         member_roles = {}
-        for i in range(len(members)):
-            member = self.find_member(members[i][0])
-            role = self.find_role(roles[i][0])
+        for i in range(len(member_names)):
+            member = self.find_member(member_names[i][0], members)
+            role = self.find_role(role_names[i][0], roles)
             member_roles[member] = role
 
         return member_roles
@@ -94,8 +97,9 @@ class AutoRole(commands.Cog):
     def _get_role_range(self) -> str:
         return f"{self.sheet_name}!{self.role_range}"
 
-    def find_role(self, role_name: str) -> discord.Role:
-        return
+    def find_role(self, role_name: str, roles: list[discord.Role]) -> discord.Role:
 
-    def find_member(self, id: str) -> discord.Member:
+        return roles.index(role_name)
+
+    def find_member(self, id: str, members: list[discord.Member]) -> discord.Member:
         return
