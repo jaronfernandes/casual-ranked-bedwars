@@ -13,7 +13,7 @@ from googleapiclient.errors import HttpError
 class AutoRole(commands.Cog):
     bot: commands.Bot
     SCOPES: list[str] = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
-    SPREADSHEET_ID = "1TJzireUkllZVZ9kESgozudSzlJkZbCtQVGVh8xpyL5M"
+    spreadsheet_id = "1TJzireUkllZVZ9kESgozudSzlJkZbCtQVGVh8xpyL5M"
     member_range: str = "A:A"
     role_range: str = "B:B"
     sheet_name = "Sheet1"
@@ -21,15 +21,30 @@ class AutoRole(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command()
+    @commands.command(name="spreadsheet-id")
+    async def set_spreadsheet_id(self, spreadsheet_id):
+        self.spreadsheet_id = spreadsheet_id
+
+    @commands.command(name="member-range")
+    async def set_member_range(self, member_range):
+        self.member_range = member_range
+
+    @commands.command(name="role-range")
+    async def set_role_range(self, role_range):
+        self.role_range = role_range
+
+    @commands.command(name="sheet-name")
+    async def set_sheet_name(self, sheet_name):
+        self.sheet_name = sheet_name
+
+    @commands.command(name="update-roles")
     async def auto_role(self, ctx: commands.Context):
         guild = ctx.guild
-        member_roles = self._get_member_roles(guild)
+        member_roles = await self._get_member_roles(guild, ctx)
         for member in member_roles:
             await member.add_roles(member_roles[member])
-            print(f"Added role to {member.name}")
 
-    def _get_member_roles(self, guild: discord.Guild) -> dict[discord.Member, discord.Role]:
+    async def _get_member_roles(self, guild: discord.Guild, ctx: commands.Context) -> dict[discord.Member, discord.Role]:
         member_names = self._read_spreadsheet(self.member_range)[1:]
         role_names = self._read_spreadsheet(self.role_range)[1:]
 
@@ -43,6 +58,10 @@ class AutoRole(commands.Cog):
 
             if role and member:
                 member_roles[member] = role
+            elif not role:
+                await ctx.send(f"Couldn't find the '{role_names[i][0]}' role.")
+            else:
+                await ctx.send(f"Couldn't find the member, {member_names[i][0]}.")
 
         return member_roles
 
@@ -56,7 +75,7 @@ class AutoRole(commands.Cog):
             spreadsheet = service.spreadsheets()
             result = (
                 spreadsheet.values()
-                .get(spreadsheetId=self.SPREADSHEET_ID, range=spreadsheet_range)
+                .get(spreadsheetId=self.spreadsheet_id, range=spreadsheet_range)
                 .execute()
             )
 
@@ -65,7 +84,6 @@ class AutoRole(commands.Cog):
             if not values:
                 print("No data found.")
             else:
-                print(values)
                 return values
 
         except HttpError as e:
@@ -103,27 +121,24 @@ class AutoRole(commands.Cog):
     @return: discord.Role object if the role exists, else None.
     """
     def find_role(self, role_name: str, roles: list[discord.Role]) -> discord.Role | None:
-        print([role.name for role in roles])
         found_role = None
 
         for role in roles:
             if role.name == role_name:
                 found_role = role
 
-        print(found_role)
         return found_role
 
     """
     This method is used to get a corresponding discord.Member object.
     @return: discord.Member object if the member exists, else None.
     """
+
     def find_member(self, member_id: str, members: list[discord.Member]) -> discord.Member:
-        print([member.name for member in members])
         found_member = None
 
         for member in members:
             if member.name == member_id:
                 found_member = member
 
-        print(found_member)
         return found_member
