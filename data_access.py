@@ -156,8 +156,22 @@ class RandomizeMap(discord.ui.View):
 
         self.clear_items()
         match = create_match(interaction.user, interaction.guild.id, False, True, self.max_players)
-        new_view = RandomizeTeams(match)
-        await interaction.response.edit_message(content='Do you want to randomize teams?', view=new_view)
+
+        if self.max_players == 2:
+            match.set_randomized_teams()
+            new_view = JoinGame(match, interaction.user)
+            embedy = new_view.get_embed()
+            filey = new_view.get_file()
+
+            await interaction.response.send_message(
+                '<@' + str(interaction.user.id) +'> is now hosting a match!', 
+                ephemeral=False, 
+                file=filey,
+                embed=embedy,
+                view=new_view)
+        else:
+            new_view = RandomizeTeams(match)
+            await interaction.response.edit_message(content='Do you want to randomize teams?', view=new_view)
 
     @button(label='Custom', style=discord.ButtonStyle.primary, custom_id="non_randomize_button")
     async def non_randomize_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -358,6 +372,10 @@ class JoinGame(discord.ui.View):
             _players_in_game[interaction.user.name] = True
             self.matching_embed.match.add_player(interaction.user, int(get_player_data_from_json_file(interaction.user, interaction.guild.id)["ELO"]))
             self.matching_embed = MatchMakeEmbed(self.matching_embed.match)
+            if self.matching_embed.match.is_full():
+                self.clear_items()
+                # new_view = 
+                await interaction.response.send_message(content='The match is now full!', view=self)
             await interaction.response.edit_message(embed=self.matching_embed.get_embed(), view=self)
             # await interaction.response.send_message(interaction.user.name+' joined the match!', ephemeral=False)
 
