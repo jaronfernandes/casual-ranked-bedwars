@@ -48,7 +48,7 @@ class Stats(commands.Cog):
             # "Losses: " + str(user_stats["Losses"]) + "\n"
         
         stats_row_two = \
-            f"{('Winstreak: ' + str(user_stats['Winstreak'])) : <5}" + "\t" + f'{"WLR: " + str(round(user_stats["Wins"] / max(1, (user_stats["Wins"] + user_stats["Losses"])) , 2)) + "%" : <40}' + "\t" + f'{"Games: " + str(user_stats["Wins"] + user_stats["Losses"]) : <40}'
+            f"{('Winstreak: ' + str(user_stats['Winstreak'])) : <5}" + "\t" + f'{"WLR: " + str(100 * round(user_stats["Wins"] / max(1, (user_stats["Wins"] + user_stats["Losses"])) , 4)) + "%" : <40}' + "\t" + f'{"Games: " + str(user_stats["Wins"] + user_stats["Losses"]) : <40}'
 
         stats_embed.add_field(name=f"Season {str(data['current_season']['season'])} Statistics", value=stats_row_one, inline=True)
         stats_embed.add_field(value=stats_row_two, name="", inline=False)
