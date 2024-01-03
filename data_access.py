@@ -1,7 +1,8 @@
 import discord, os, json, random
 from datetime import date
-from entities import Match, MatchMakeEmbed
-from discord.ui import button
+from entities import Match, MatchMakeEmbed, TeamMakeEmbed
+from discord.ui import button, select
+from matchmaking import matchmake
 
 
 ## TEMPORARY DATA
@@ -374,8 +375,26 @@ class JoinGame(discord.ui.View):
             self.matching_embed = MatchMakeEmbed(self.matching_embed.match)
             if self.matching_embed.match.is_full():
                 self.clear_items()
-                # new_view = 
-                await interaction.response.send_message(content='The match is now full!', view=self)
+                self.has_interacted_with = True
+                
+                # IF IT'S A 2 PLAYER GAME OR RANDOM, THEN GO STRAIGHT TO SCORING VIEW. OTHERWISE GO TO MATCH MAKE VIEW.
+                if self.matching_embed.match.get_randomized_teams() or self.matching_embed.match.get_max_players() == 2:
+                    remaining_players, teams_so_far = matchmake(self.matching_embed.match)
+                    captains = [teams_so_far["Team One"][0], teams_so_far["Team Two"][0]]
+                    self.matching_embed.match.set_teams(teams_so_far)
+
+                    new_embed = TeamMakeEmbed(self.matching_embed.match)
+                    # new_view = ScoringView(self.matching_embed.match, interaction.user)
+                    new_view = MatchMakeView(self.matching_embed.match, captains[0].id, interaction.user, teams_so_far, remaining_players)
+                    await interaction.response.edit_message(content='The match is now full!', embed=new_embed.get_embed(), view=self) # view=new_view
+                else:
+                    remaining_players, teams_so_far = matchmake(self.matching_embed.match)
+                    captains = [teams_so_far["Team One"][0], teams_so_far["Team Two"][0]]
+                    self.matching_embed.match.set_teams(teams_so_far)
+
+                    new_embed = TeamMakeEmbed(self.matching_embed.match)
+                    new_view = MatchMakeView(self.matching_embed.match, captains[0].id, interaction.user, teams_so_far, remaining_players)
+                    await interaction.response.send_message(content="It is now <@" + captains[0].id + ">'s turn to choose!", view=new_view, embed=new_embed.get_embed())
             await interaction.response.edit_message(embed=self.matching_embed.get_embed(), view=self)
             # await interaction.response.send_message(interaction.user.name+' joined the match!', ephemeral=False)
 
@@ -400,7 +419,7 @@ class JoinGame(discord.ui.View):
 
     @button(label='Cancel', style=discord.ButtonStyle.danger, custom_id="cancel_match_button")
     async def cancel_match(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if interaction.user.id != self.matching_embed.get_host().id:
+        if interaction.user.id != self.matching_embed.get_host().id:  # and not interaction.user.administrator: # POTENTIALLY ADD THIS FOR ADMINS
             await interaction.response.send_message('You are not the host!', ephemeral=True)
         else:
             if self.has_interacted_with:
@@ -413,6 +432,161 @@ class JoinGame(discord.ui.View):
             for player in self.matching_embed.match.players:
                 del _players_in_game[player.name]
             del _games_running[self.matching_embed.match.id]
+            await interaction.response.send_message(content="<@" + str(interaction.user.id)+'> cancelled the match!', view=self)
+
+
+def MatchMakeView(match: Match, captain_choosing: int, user: discord.User, teams: dict[str, list[discord.User]], players_remaining: list[discord.User]) -> discord.ui.View:
+    """Return a MatchMakeView."""
+    options_list = [discord.SelectOption(label=player.name.lower(), value=player.id) for player in players_remaining]
+
+    class _MatchMakeView(discord.ui.View):
+        """View for joining a game."""
+        match: Match
+        captains: list[discord.User]
+        captain_choosing: int  # By ID, or -1 if no one is choosing.
+        players_remaining: list[discord.User]
+        options: list[discord.SelectOption]
+        teams: dict[str, list[discord.User]]
+        teams_embed: TeamMakeEmbed
+        has_interacted_with: bool
+
+        def __init__(self, match: Match, captain_choosing: int, user: discord.User, teams: dict[str, list[discord.User]], players_remaining: list[discord.User]):
+            super().__init__()
+            self.has_interacted_with = False
+            self.match = match
+            self.teams = teams
+            self.captains = [teams["Team One"][0], teams["Team Two"][0]]
+            self.captain_choosing = self.captains[0].id if captain_choosing == -1 else captain_choosing
+            self.players_remaining = players_remaining
+            self.options = options_list
+            self.teams_embed = TeamMakeEmbed(match)
+            
+
+        def get_embed(self) -> discord.Embed:
+            """Return the embed."""
+            return self.matching_embed.get_embed()
+        
+        def get_file(self) -> discord.File:
+            """Return the file."""
+            return self.matching_embed.get_file()
+        
+        def get_options(self) -> list[discord.SelectOption]:
+            """Return the options."""
+            return self.options
+        
+        @select(placeholder='Select a player', options=options_list, custom_id="select_player")
+        async def select_player(self, select: discord.ui.Select, interaction: discord.Interaction):
+            if interaction.user.id != self.captains[0].id and interaction.user.id != self.captains[1].id:
+                await interaction.response.send_message('You are not a captain!', ephemeral=True)
+            elif interaction.user.id != self.captain_choosing:
+                await interaction.response.send_message('It is not your turn to choose!', ephemeral=True)
+            else:
+                if self.has_interacted_with:
+                    await interaction.response.send_message('This message has expired!', ephemeral=True)
+                    return
+            
+                self.has_interacted_with = True
+
+                player_chosen = select.value[0]
+                self.players_remaining.remove(player_chosen)
+                if self.captain_choosing == self.captains[0].id:
+                    self.teams["Team One"].append(player_chosen)
+                    self.captain_choosing = self.captains[1].id
+                else:
+                    self.teams["Team Two"].append(player_chosen)
+                    self.captain_choosing = self.captains[0].id
+
+                match = self.teams_embed.match
+                match.set_teams(self.teams_embed.match.teams)
+
+                if len(self.players_remaining) == 1:
+                    # Even teams by default
+                    self.teams["Team Two"].append(self.players_remaining[0])
+                    match.set_teams(self.teams)
+                    match.set_ready()
+                    teams_embed = TeamMakeEmbed(self.match)
+                    new_view = ScoringView(self.match, self.captain_choosing, interaction.user, teams_embed.match.teams, teams_embed.match.players)
+                    await interaction.response.edit_message(content="The teams are now ready!", view=self)
+                    return
+
+                teams_embed = TeamMakeEmbed(self.match)
+                new_view = MatchMakeView(self.match, self.captain_choosing, interaction.user, teams_embed.match.teams, teams_embed.match.players)
+                await interaction.response.edit_message(content="It is now <@" + self.captain_choosing + ">'s turn to choose", view=new_view, embed=teams_embed.get_embed())
+
+        @button(label='Cancel', style=discord.ButtonStyle.danger, custom_id="cancel_match_button")
+        async def cancel_match(self, interaction: discord.Interaction, button: discord.ui.Button):
+            if interaction.user.id != self.matching_embed.get_host().id:
+                await interaction.response.send_message('You are not the host!', ephemeral=True)
+            else:
+                if self.has_interacted_with:
+                    await interaction.response.send_message('This message has expired!', ephemeral=True)
+                    return
+            
+                self.has_interacted_with = True
+
+                self.clear_items()
+                for player in self.matching_embed.match.players:
+                    del get_players_in_game[player.name]
+                del get_games_running[self.matching_embed.match.id]
+                await interaction.response.send_message(content="<@" + str(interaction.user.id)+'> cancelled the match!', view=self)
+    
+    return _MatchMakeView(match, captain_choosing, user, teams, players_remaining)
+
+class ScoringView(discord.ui.View):
+    """View for scoring a game."""
+    match: Match
+    teams: dict[str, list[discord.User]]
+    TeamMakeEmbed: TeamMakeEmbed
+    has_interacted_with: bool
+
+    def __init__(self, match: Match, user: discord.User, teams: dict[str, list[discord.User]]):
+        super().__init__()
+        self.has_interacted_with = False
+        self.match = match
+        self.teams = teams
+        self.matching_embed = TeamMakeEmbed(match)
+        
+
+    def get_embed(self) -> discord.Embed:
+        """Return the embed."""
+        return self.matching_embed.get_embed()
+    
+    def get_file(self) -> discord.File:
+        """Return the file."""
+        return self.matching_embed.get_file()
+    
+    @button(label='Score', style=discord.ButtonStyle.green, custom_id="score_button")
+    async def score_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if not interaction.user.administrator:  ## ADD SCORER ROLE HERE IN THE FUTURE.
+            await interaction.response.send_message('You are not an administrator!', ephemeral=True)
+        else:
+            if self.has_interacted_with:
+                await interaction.response.send_message('This message has expired!', ephemeral=True)
+                return
+
+            self.has_interacted_with = True
+
+            self.clear_items()
+            self.match.set_ready()
+            teams_embed = TeamMakeEmbed(self.match)
+            new_view = ScoringView(self.match, interaction.user, teams_embed.match.teams)
+            await interaction.response.edit_message(content="The teams are now ready!", view=self)
+    
+    @button(label='Cancel', style=discord.ButtonStyle.danger, custom_id="cancel_match_button")
+    async def cancel_match(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if not interaction.user.administrator:
+            await interaction.response.send_message('You are not an administrator!', ephemeral=True)
+        else:
+            if self.has_interacted_with:
+                await interaction.response.send_message('This message has expired!', ephemeral=True)
+                return
+        
+            self.has_interacted_with = True
+
+            self.clear_items()
+            for player in self.matching_embed.match.players:
+                del get_players_in_game[player.name]
+            del get_games_running[self.matching_embed.match.id]
             await interaction.response.send_message(content="<@" + str(interaction.user.id)+'> cancelled the match!', view=self)
 
 
