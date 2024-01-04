@@ -1,5 +1,5 @@
 """
-Written by: Jaron Fernandes   Last updated: 2023-12-9
+Written by: Jaron Fernandes   Last updated: 2024-1-04
 Github: jaronfernandes
 Repository: https://github.com/jaronfernandes/casual-ranked-bedwars
 
@@ -15,7 +15,7 @@ from datetime import date
 from discord.ext import commands
 from discord.ui import Button, button
 from dotenv import load_dotenv
-import matchmaking
+# import matchmaking
 
 load_dotenv()
 

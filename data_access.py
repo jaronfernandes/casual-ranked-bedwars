@@ -35,6 +35,7 @@ class RandomizeCaptains(discord.ui.View):
 
         self.clear_items()
 
+        self.match.set_randomized_teams(False)
         self.match.set_randomized_captains()
         new_view = JoinGame(self.match, interaction.user)
         embedy = new_view.get_embed()
@@ -388,14 +389,16 @@ class JoinGame(discord.ui.View):
                     new_view = MatchMakeView(self.matching_embed.match, captains[0].id, interaction.user, teams_so_far, remaining_players)
                     await interaction.response.edit_message(content='The match is now full!', embed=new_embed.get_embed(), view=self) # view=new_view
                 else:
+                    print("here")
                     remaining_players, teams_so_far = matchmake(self.matching_embed.match)
                     captains = [teams_so_far["Team One"][0], teams_so_far["Team Two"][0]]
                     self.matching_embed.match.set_teams(teams_so_far)
 
                     new_embed = TeamMakeEmbed(self.matching_embed.match)
                     new_view = MatchMakeView(self.matching_embed.match, captains[0].id, interaction.user, teams_so_far, remaining_players)
-                    await interaction.response.send_message(content="It is now <@" + captains[0].id + ">'s turn to choose!", view=new_view, embed=new_embed.get_embed())
-            await interaction.response.edit_message(embed=self.matching_embed.get_embed(), view=self)
+                    await interaction.response.edit_message(content="It is now <@" + str(captains[0].id) + ">'s turn to choose!", view=new_view, embed=new_embed.get_embed())
+            else:
+                await interaction.response.edit_message(embed=self.matching_embed.get_embed(), view=self)
             # await interaction.response.send_message(interaction.user.name+' joined the match!', ephemeral=False)
 
     @button(label='Leave', style=discord.ButtonStyle.danger, custom_id="leave_button")
@@ -438,6 +441,10 @@ class JoinGame(discord.ui.View):
 def MatchMakeView(match: Match, captain_choosing: int, user: discord.User, teams: dict[str, list[discord.User]], players_remaining: list[discord.User]) -> discord.ui.View:
     """Return a MatchMakeView."""
     options_list = [discord.SelectOption(label=player.name.lower(), value=player.id) for player in players_remaining]
+    print("HIIII")
+    print(options_list)
+
+    # Test options list: [discord.SelectOption(label="hi",value="hii")]
 
     class _MatchMakeView(discord.ui.View):
         """View for joining a game."""
@@ -475,7 +482,7 @@ def MatchMakeView(match: Match, captain_choosing: int, user: discord.User, teams
             return self.options
         
         @select(placeholder='Select a player', options=options_list, custom_id="select_player")
-        async def select_player(self, select: discord.ui.Select, interaction: discord.Interaction):
+        async def select_player(self, interaction: discord.Interaction, select: discord.ui.Select):
             if interaction.user.id != self.captains[0].id and interaction.user.id != self.captains[1].id:
                 await interaction.response.send_message('You are not a captain!', ephemeral=True)
             elif interaction.user.id != self.captain_choosing:
@@ -487,7 +494,8 @@ def MatchMakeView(match: Match, captain_choosing: int, user: discord.User, teams
             
                 self.has_interacted_with = True
 
-                player_chosen = select.value[0]
+                player_chosen = interaction.guild.get_member(int(select.values[0]))
+                print(player_chosen)
                 self.players_remaining.remove(player_chosen)
                 if self.captain_choosing == self.captains[0].id:
                     self.teams["Team One"].append(player_chosen)
@@ -505,13 +513,16 @@ def MatchMakeView(match: Match, captain_choosing: int, user: discord.User, teams
                     match.set_teams(self.teams)
                     match.set_ready()
                     teams_embed = TeamMakeEmbed(self.match)
-                    new_view = ScoringView(self.match, self.captain_choosing, interaction.user, teams_embed.match.teams, teams_embed.match.players)
-                    await interaction.response.edit_message(content="The teams are now ready!", view=self)
+                    new_view = ScoringView(self.match, interaction.user, teams_embed.match.teams)
+                    self.clear_items()
+                    print([player.name for player in self.match.teams["Team One"]])
+                    print([player.name for player in self.match.teams["Team Two"]])
+                    await interaction.response.edit_message(content="The teams are now ready!", view=self, embed=teams_embed.get_embed())
                     return
 
                 teams_embed = TeamMakeEmbed(self.match)
                 new_view = MatchMakeView(self.match, self.captain_choosing, interaction.user, teams_embed.match.teams, teams_embed.match.players)
-                await interaction.response.edit_message(content="It is now <@" + self.captain_choosing + ">'s turn to choose", view=new_view, embed=teams_embed.get_embed())
+                await interaction.response.edit_message(content="It is now <@" + str(self.captain_choosing) + ">'s turn to choose", view=new_view, embed=teams_embed.get_embed())
 
         @button(label='Cancel', style=discord.ButtonStyle.danger, custom_id="cancel_match_button")
         async def cancel_match(self, interaction: discord.Interaction, button: discord.ui.Button):
