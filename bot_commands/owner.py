@@ -21,9 +21,6 @@ class Owner(commands.Cog):
             if not interaction.user.id == self.bot.owner_id:
                 await interaction.response.send_message("You do not have permission to do this!", ephemeral=True)
                 return
-            elif interaction.user.id != self.ctx.author.id:
-                await interaction.response.send_message("You are not the person who invoked this command!", ephemeral=True)
-                return
             elif self.has_interacted:
                 await interaction.response.send_message("You have already responded to this message!", ephemeral=True)
                 return
@@ -41,9 +38,6 @@ class Owner(commands.Cog):
         async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
             if not interaction.user.id == self.bot.owner_id:
                 await interaction.response.send_message("You do not have permission to do this!", ephemeral=True)
-                return
-            elif interaction.user.id != self.ctx.author.id:
-                await interaction.response.send_message("You are not the person who invoked this command!", ephemeral=True)
                 return
             elif self.has_interacted:
                 await interaction.response.send_message("You have already responded to this message!", ephemeral=True)
