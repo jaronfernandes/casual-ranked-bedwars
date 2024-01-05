@@ -65,15 +65,15 @@ class Stats(commands.Cog):
     async def stats(self, ctx, username=None):
         """Display the map pool for the current season."""        
         if username is None:
-            await ctx.send(embed=self.create_stats_embed(ctx))
+            await ctx.reply(embed=self.create_stats_embed(ctx), mention_author=True, ephemeral=True)
             return
         
         member_to_get_stats = ctx.guild.get_member_named(username)
         
         if member_to_get_stats is None:
-            await ctx.send("Please enter a valid username from this server!")
+            await ctx.reply(content="Please enter a valid username from this server!", mention_author=True, ephemeral=True)
         else:
-            await ctx.send(embed=self.create_stats_embed(ctx, member_to_get_stats))
+            await ctx.reply(embed=self.create_stats_embed(ctx, member_to_get_stats), mention_author=True, ephemeral=True)
 
 async def setup(bot):
     await bot.add_cog(Stats(bot))
