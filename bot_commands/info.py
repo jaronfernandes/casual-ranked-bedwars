@@ -67,7 +67,6 @@ class Info(commands.Cog):
             if elo_dict[elo_key][4] == "N/A" or all(elo_dict[elo_key][4] != str(role.id) for role in ctx.guild.roles):
                 admin_role = get_admin_role(ctx.guild.id)
                 if ctx.author.guild_permissions.administrator or any(admin_role == role.id for role in ctx.author.roles):
-                    print('hi2')
                     return "Setting up ELO roles"
                 else:
                     return "Not set up yet"
