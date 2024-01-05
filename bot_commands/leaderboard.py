@@ -81,11 +81,11 @@ class Leaderboard(commands.Cog):
         # Check if there are enough users for the page number.
         total_pages = math.ceil(len(data["user_data"]) / 10)
         if total_pages == 0:
-            await ctx.send("There are no users in the database!")
+            await ctx.reply(content="There are no users in the database!", mention_author=True, ephemeral=True)
         elif page > total_pages or page < 1:
-            await ctx.send("Invalid page number! Please try a page number between 1 and " + str(total_pages) + ".")
+            await ctx.reply(content="Invalid page number! Please try a page number between 1 and " + str(total_pages) + ".", mention_author=True, ephemeral=True)
         else:
-            await ctx.send(embed=self.create_leaderboard_embed(ctx, data, stats, page))
+            await ctx.reply(embed=self.create_leaderboard_embed(ctx, data, stats, page), mention_author=True, ephemeral=True)
 
 async def setup(bot):
     await bot.add_cog(Leaderboard(bot))
