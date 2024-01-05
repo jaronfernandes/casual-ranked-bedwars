@@ -14,9 +14,9 @@ class Play(commands.Cog):
         if valid_for_matchmaking(ctx.author.name):
             get_players_in_game()[ctx.author.name] = True
             viewe = CreateMatch(ctx.author)
-            await ctx.send(content="Enter the amount of players you'd like to play with with (2,4,6,8).", view=viewe)
+            await ctx.reply(content="Enter the amount of players you'd like to play with with (2,4,6,8).", view=viewe, mention_author=True, ephemeral=True)
         else:
-            await ctx.send('You\'re already in a game!')
+            await ctx.reply('You\'re already in a game!', mention_author=True, ephemeral=True)
 
 async def setup(bot):
     await bot.add_cog(Play(bot))
