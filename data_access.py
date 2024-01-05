@@ -830,6 +830,22 @@ def backup_data() -> bool:
         return False
     
 
+def clear_data() -> bool:
+    """Clear the data file."""
+    try:
+        with open("data", "w") as file:
+            data = {
+                "warning_msg": "DO NOT MODIFY THIS FILE; THESE ARE HANDLED BY THE BOT",
+                "SERVERS": {}
+            }
+            json.dump(data, file)
+            return True
+    except Exception as e:
+        print(e)
+        print("Error clearing data.")
+        return False
+
+
 async def setup_elo_roles(guild: discord.Guild) -> bool:
     """Sets up the ELO roles in the server (through the DATA FILE!). Returns True if successful, False otherwise."""
     # try:
