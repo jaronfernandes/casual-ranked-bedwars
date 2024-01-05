@@ -87,11 +87,11 @@ class Info(commands.Cog):
         info_embed_object = self.create_info_embed(ctx)
         if info_embed_object == "Setting up ELO roles":
             new_view = SetupELORoles()
-            await ctx.send("It seems the roles for the ELO distribution have not been set up yet. Would you like to set them up now?", ephemeral=True, view=new_view)
+            await ctx.reply(content="It seems the roles for the ELO distribution have not been set up yet. Would you like to set them up now?", ephemeral=True, mentions_author=True, view=new_view)
         elif info_embed_object == "Not set up yet":
-            await ctx.send("It seems the roles for the ELO distribution have not been set up yet. Please contact an admin.")
+            await ctx.reply(content="It seems the roles for the ELO distribution have not been set up yet. Please contact an admin.", ephemeral=True, mentions_author=True)
         else:
-            await ctx.send(embed=self.create_info_embed(ctx))
+            await ctx.reply(embed=self.create_info_embed(ctx), ephemeral=True, mentions_author=True)
 
 async def setup(bot):
     await bot.add_cog(Info(bot))
