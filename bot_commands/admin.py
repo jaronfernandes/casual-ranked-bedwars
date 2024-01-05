@@ -2,11 +2,51 @@ import discord, os
 from discord import app_commands
 from discord.ext import commands
 from datetime import date
-from data_access import backup_data
+from data_access import reset_season
 
 class Admin(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
+    # For resetting season
+    class SeasonUpdateView(discord.ui.View):
+        has_interacted = False
+        bot: commands.Bot
+
+        def __init__(self, ctx):
+            super().__init__(timeout=60)
+            self.ctx = ctx
+            self.bot = ctx.bot
+
+        @discord.ui.button(label="Reset Season", style=discord.ButtonStyle.green)
+        async def save(self, interaction: discord.Interaction, button: discord.ui.Button):
+            if not interaction.user.id == self.bot.owner_id:
+                await interaction.response.send_message("You do not have permission to do this!", ephemeral=True)
+                return
+            elif self.has_interacted:
+                await interaction.response.send_message("You have already responded to this message!", ephemeral=True)
+                return
+            else:
+                self.has_interacted = True
+                
+                successful_reset, season = reset_season()
+                
+                if successful_reset:
+                    await interaction.response.send_message("Successfully updated to season " + int(season) + "!", ephemeral=True)
+                else:
+                    await interaction.response.send_message("There was an error setting the new season!\nPlease check the console for more information.", ephemeral=True)
+
+        @discord.ui.button(label="Cancel", style=discord.ButtonStyle.danger)
+        async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
+            if not interaction.user.id == self.bot.owner_id:
+                await interaction.response.send_message("You do not have permission to do this!", ephemeral=True)
+                return
+            elif self.has_interacted:
+                await interaction.response.send_message("You have already responded to this message!", ephemeral=True)
+                return
+            else:
+                self.has_interacted = True
+                await interaction.response.send_message("Did not reset the season!", ephemeral=True)
 
     @commands.has_permissions(administrator=True)
     @commands.hybrid_command(aliases = ['a','ac', 'admin_commands', 'admin-commands', 'admin-cmds', 'admin_cmds', 'acmds', 'a-cmds'], brief = 'Executes an admin command (admins only)', description = 'Execute an admin command (admin only), or view the list of admin commands (default).')
