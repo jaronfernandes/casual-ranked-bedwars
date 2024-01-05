@@ -814,6 +814,22 @@ def create_match(player, playerscurrent_guild_id: int, is_big_team_map: bool = F
         return None
     
 
+def backup_data() -> bool:
+    """Backup the data file."""
+    try:
+        with open(f"data", "r") as file:
+            string = file.read()
+            data = json.loads(string)
+
+            with open(f"backup_data_{str(date.today())}.json", "w") as backup_file:
+                json.dump(data, backup_file)
+                return True
+    except Exception as e:
+        print(e)
+        print("Error backing up data.")
+        return False
+    
+
 async def setup_elo_roles(guild: discord.Guild) -> bool:
     """Sets up the ELO roles in the server (through the DATA FILE!). Returns True if successful, False otherwise."""
     # try:
