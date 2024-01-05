@@ -67,7 +67,6 @@ class Info(commands.Cog):
             if elo_dict[elo_key][4] == "N/A" or all(elo_dict[elo_key][4] != str(role.id) for role in ctx.guild.roles):
                 admin_role = get_admin_role(ctx.guild.id)
                 if ctx.author.guild_permissions.administrator or any(admin_role == role.id for role in ctx.author.roles):
-                    print('hi2')
                     return "Setting up ELO roles"
                 else:
                     return "Not set up yet"
@@ -87,11 +86,11 @@ class Info(commands.Cog):
         info_embed_object = self.create_info_embed(ctx)
         if info_embed_object == "Setting up ELO roles":
             new_view = SetupELORoles()
-            await ctx.send("It seems the roles for the ELO distribution have not been set up yet. Would you like to set them up now?", ephemeral=True, view=new_view)
+            await ctx.reply(content="It seems the roles for the ELO distribution have not been set up yet. Would you like to set them up now?", ephemeral=True, mention_author=True, view=new_view)
         elif info_embed_object == "Not set up yet":
-            await ctx.send("It seems the roles for the ELO distribution have not been set up yet. Please contact an admin.")
+            await ctx.reply(content="It seems the roles for the ELO distribution have not been set up yet. Please contact an admin.", ephemeral=True, mention_author=True)
         else:
-            await ctx.send(embed=self.create_info_embed(ctx))
+            await ctx.reply(embed=self.create_info_embed(ctx), ephemeral=True, mention_author=True)
 
 async def setup(bot):
     await bot.add_cog(Info(bot))

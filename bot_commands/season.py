@@ -77,11 +77,11 @@ class Season(commands.Cog):
 
         current_season = data["current_season"]["season"]
         if season < 0:
-            await ctx.send("Negative seasons do not exist! Please choose a range from 1 to " + str(current_season) + ", or 0/omitted for the current season.")
+            await ctx.reply(content="Negative seasons do not exist! Please choose a range from 1 to " + str(current_season) + ", or 0/omitted for the current season.", mention_author=True, ephemeral=True)
         elif season > current_season:
-            await ctx.send("Season " + str(season) + " has not started yet! Please choose a range from 1 to " + str(current_season) + ", 0/omitted for the current season.")
+            await ctx.reply(content="Season " + str(season) + " has not started yet! Please choose a range from 1 to " + str(current_season) + ", 0/omitted for the current season.", mention_author=True, ephemeral=True)
         else:
-            await ctx.send(embed=self.create_season_embed(ctx.guild, data, season))
+            await ctx.reply(embed=self.create_season_embed(ctx.guild, data, season), mention_author=True, ephemeral=True)
 
 async def setup(bot):
     await bot.add_cog(Season(bot))

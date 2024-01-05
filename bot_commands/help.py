@@ -24,8 +24,7 @@ class Help(commands.Cog):
         help_embed.add_field(name="maps", value="View the maps currently in rotation.", inline=False)
         help_embed.add_field(name="lb", value="View the leaderboard.", inline=False)
         help_embed.add_field(name="winners", value="View the winners of the previous season.", inline=False)
-        help_embed.add_field(name="score", value="Score a game [ADMINS ONLY]", inline=False)
-        help_embed.add_field(name="reset-season", value="Reset the season to a new one [ADMINS ONLY]", inline=False)
+        help_embed.add_field(name="admin [command]", value="All admin commands (default displays a list of admin commands)", inline=False)
 
         try:
             help_embed.set_thumbnail(url=ctx.guild.icon)
@@ -37,7 +36,7 @@ class Help(commands.Cog):
     @commands.hybrid_command(aliases = ['h'], brief = 'View the help menu')
     async def help(self, ctx):
         """Display the map pool for the current season."""
-        await ctx.send(embed=self.create_help_embed(ctx))
+        await ctx.reply(embed=self.create_help_embed(ctx), ephemeral=True, mention_author=True)
 
 async def setup(bot):
     await bot.add_cog(Help(bot))

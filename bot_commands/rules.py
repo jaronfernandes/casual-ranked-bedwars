@@ -35,7 +35,7 @@ class Rules(commands.Cog):
     @commands.hybrid_command(aliases = ['r'], brief = 'View the rules for Casual Ranked Bedwars')
     async def rules(self, ctx):
         """Display the map pool for the current season."""
-        await ctx.send(embed=self.create_rules_embed(ctx))
+        await ctx.reply(embed=self.create_rules_embed(ctx), mention_author=True, ephemeral=True)
 
 async def setup(bot):
     await bot.add_cog(Rules(bot))
