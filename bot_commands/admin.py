@@ -29,7 +29,6 @@ class Admin(commands.Cog):
             )   
 
             help_embed.add_field(name="help", value="View all the admin-only commands", inline=False)
-            help_embed.add_field(name="backup", value="Backup the current bot data", inline=False)
             help_embed.add_field(name="score", value="Score a game", inline=False)
             help_embed.add_field(name="reset-season", value="Reset the season to a new one", inline=False)
 
