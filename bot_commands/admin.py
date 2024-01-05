@@ -20,7 +20,7 @@ class Admin(commands.Cog):
 
         @discord.ui.button(label="Reset Season", style=discord.ButtonStyle.green)
         async def save(self, interaction: discord.Interaction, button: discord.ui.Button):
-            if not interaction.user.id == self.bot.owner_id:
+            if not interaction.user.guild_permissions.administrator:
                 await interaction.response.send_message("You do not have permission to do this!", ephemeral=True)
                 return
             elif self.has_interacted:
@@ -38,7 +38,7 @@ class Admin(commands.Cog):
 
         @discord.ui.button(label="Cancel", style=discord.ButtonStyle.danger)
         async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
-            if not interaction.user.id == self.bot.owner_id:
+            if not interaction.user.guild_permissions.administrator:
                 await interaction.response.send_message("You do not have permission to do this!", ephemeral=True)
                 return
             elif self.has_interacted:
@@ -55,7 +55,6 @@ class Admin(commands.Cog):
         """Display the map pool for the current season."""
         if not ctx.author.guild_permissions.administrator:
             await ctx.reply(content="You do not have the permission to do this!", mention_author=True, ephemeral=True)
-
         elif option != None and option.lower() == 'reset-season':
             await ctx.reply(content="Are you sure you want to end this season and start a new one?", view=self.SeasonUpdateView(ctx), mention_author=True, ephemeral=True)
         elif option != None and not option.lower() == 'help':
