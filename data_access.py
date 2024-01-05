@@ -422,7 +422,7 @@ class JoinGame(discord.ui.View):
 
     @button(label='Cancel', style=discord.ButtonStyle.danger, custom_id="cancel_match_button")
     async def cancel_match(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if interaction.user.id != self.matching_embed.get_host().id:  # and not interaction.user.administrator: # POTENTIALLY ADD THIS FOR ADMINS
+        if interaction.user.id != self.matching_embed.get_host().id:  # and not interaction.user.guild_permissions.administrator: # POTENTIALLY ADD THIS FOR ADMINS
             await interaction.response.send_message('You are not the host!', ephemeral=True)
         else:
             if self.has_interacted_with:
@@ -568,7 +568,7 @@ class ScoringView(discord.ui.View):
     
     @button(label='Score', style=discord.ButtonStyle.green, custom_id="score_button")
     async def score_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if not interaction.user.administrator:  ## ADD SCORER ROLE HERE IN THE FUTURE.
+        if not interaction.user.guild_permissions.administrator:  ## ADD SCORER ROLE HERE IN THE FUTURE.
             await interaction.response.send_message('You are not an administrator!', ephemeral=True)
         else:
             if self.has_interacted_with:
@@ -585,7 +585,7 @@ class ScoringView(discord.ui.View):
     
     @button(label='Cancel', style=discord.ButtonStyle.danger, custom_id="cancel_match_button")
     async def cancel_match(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if not interaction.user.administrator:
+        if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message('You are not an administrator!', ephemeral=True)
         else:
             if self.has_interacted_with:
