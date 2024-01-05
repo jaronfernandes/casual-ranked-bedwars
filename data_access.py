@@ -1,8 +1,13 @@
-import discord, os, json, random
+import discord, os, json, random, asyncio
 from datetime import date
 from entities import Match, MatchMakeEmbed, TeamMakeEmbed
 from discord.ui import button, select
 from matchmaking import matchmake
+
+
+## CONSTANTS
+
+TIMEOUT_LENGTH = 60
 
 
 ## TEMPORARY DATA
@@ -12,17 +17,33 @@ _games_running = {}
 _players_in_game = {}
 
 
+## TIMEOUT FUNCTION
+
+
+async def _timeout_helper(channel: discord.TextChannel, host: discord.User, has_interacted_with: bool):
+    if not has_interacted_with:
+        await channel.send(content=f'<@{host.id}> Your current match creation has timed out! Please create a new match and try again.')
+        del _players_in_game[host.name]
+
+
 ## UI CLASSES
 
 
 class RandomizeCaptains(discord.ui.View):
     match: Match
     has_interacted_with: bool
+    host: discord.User
+    channel: discord.TextChannel
 
-    def __init__ (self, match: Match) -> None:
-        super().__init__()
+    def __init__ (self, match: Match, host: discord.User, channel: discord.TextChannel) -> None:
+        super().__init__(timeout=TIMEOUT_LENGTH)
         self.has_interacted_with = False
         self.match = match
+        self.host = host
+        self.channel = channel
+
+    async def on_timeout(self):
+        await _timeout_helper(self.channel, self.host, self.has_interacted_with)
 
     @button(label='Random', style=discord.ButtonStyle.primary, custom_id="randomize_button")
     async def randomize_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -85,11 +106,18 @@ class RandomizeCaptains(discord.ui.View):
 class RandomizeTeams(discord.ui.View):
     match: Match
     has_interacted_with: bool
+    host: discord.User
+    channel: discord.TextChannel
 
-    def __init__ (self, match: Match) -> None:
-        super().__init__()
+    def __init__ (self, match: Match, host: discord.User, channel: discord.TextChannel) -> None:
+        super().__init__(timeout=TIMEOUT_LENGTH)
         self.has_interacted_with = False
         self.match = match
+        self.host = host
+        self.channel = channel
+
+    async def on_timeout(self):
+        await _timeout_helper(self.channel, self.host, self.has_interacted_with)
     
     @button(label='Random', style=discord.ButtonStyle.primary, custom_id="randomize_button")
     async def randomize_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -124,7 +152,7 @@ class RandomizeTeams(discord.ui.View):
         self.clear_items()
 
         self.match.set_randomized_teams(False)
-        new_view = RandomizeCaptains(self.match)
+        new_view = RandomizeCaptains(self.match, interaction.user, interaction.channel)
         await interaction.response.edit_message(content='Do you want to randomize team captains?', view=new_view)
 
     @button(label='Cancel Match', style=discord.ButtonStyle.danger, custom_id="cancel_button")
@@ -142,11 +170,18 @@ class RandomizeTeams(discord.ui.View):
 class RandomizeMap(discord.ui.View):
     has_interacted_with: bool
     max_players: int
+    host: discord.User
+    channel: discord.TextChannel
 
-    def __init__(self, max_players: int) -> None:
-        super().__init__()
+    def __init__(self, max_players: int, host, channel: discord.TextChannel) -> None:
+        super().__init__(timeout=TIMEOUT_LENGTH)
         self.has_interacted_with = False
         self.max_players = max_players
+        self.host = host
+        self.channel = channel
+
+    async def on_timeout(self):
+        await _timeout_helper(self.channel, self.host, self.has_interacted_with)
 
     @button(label='Random', style=discord.ButtonStyle.primary, custom_id="randomize_button")
     async def randomize_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -172,7 +207,7 @@ class RandomizeMap(discord.ui.View):
                 embed=embedy,
                 view=new_view)
         else:
-            new_view = RandomizeTeams(match)
+            new_view = RandomizeTeams(match, interaction.user, interaction.channel)
             await interaction.response.edit_message(content='Do you want to randomize teams?', view=new_view)
 
     @button(label='Custom', style=discord.ButtonStyle.primary, custom_id="non_randomize_button")
@@ -185,7 +220,7 @@ class RandomizeMap(discord.ui.View):
         
         self.clear_items()
         match = create_match(interaction.user, interaction.guild.id, False, False, self.max_players)
-        new_view = RandomizeTeams(match)
+        new_view = RandomizeTeams(match, interaction.user, interaction.channel)
         await interaction.response.edit_message(content='Do you want to randomize teams?', view=new_view)
 
     @button(label='Cancel Match', style=discord.ButtonStyle.danger, custom_id="cancel_button")
@@ -203,12 +238,19 @@ class RandomizeMap(discord.ui.View):
 
 class UsingSmallerMaps(discord.ui.View):
     has_interacted_with: bool
+    host: discord.User
     max_players: int
+    channel: discord.TextChannel
 
-    def __init__(self, max_players: int) -> None:
-        super().__init__()
+    def __init__(self, max_players: int, host, channel) -> None:
+        super().__init__(timeout=TIMEOUT_LENGTH)
         self.has_interacted_with = False
         self.max_players = max_players
+        self.host = host
+        self.channel = channel
+
+    async def on_timeout(self):
+        await _timeout_helper(self.channel, self.host, self.has_interacted_with)
 
     @button(label='Yes', style=discord.ButtonStyle.primary, custom_id="yes_button")
     async def yes_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -218,7 +260,7 @@ class UsingSmallerMaps(discord.ui.View):
         
         self.has_interacted_with = True
         
-        new_view = RandomizeMap(self.max_players)
+        new_view = RandomizeMap(self.max_players, interaction.user, interaction.channel)
         self.clear_items()
         await interaction.response.edit_message(content='Do you want to randomize your map?', view=new_view)
 
@@ -230,7 +272,7 @@ class UsingSmallerMaps(discord.ui.View):
         
         self.has_interacted_with = True
         
-        new_view = RandomizeMap(self.max_players)
+        new_view = RandomizeMap(self.max_players, interaction.user, interaction.channel)
         self.clear_items()
         await interaction.response.edit_message(content='Do you want to randomize your map?', view=new_view)
 
@@ -248,14 +290,19 @@ class UsingSmallerMaps(discord.ui.View):
 
 
 class CreateMatch(discord.ui.View):
+    channel: discord.TextChannel
     host: discord.User
     has_interacted_with: bool
 
-    def __init__(self, host: discord.User) -> None:
-        super().__init__()
+    def __init__(self, host: discord.User, channel: discord.TextChannel) -> None:
+        super().__init__(timeout=TIMEOUT_LENGTH)
+        self.channel = channel
         self.has_interacted_with = False
         self.host = host
 
+    async def on_timeout(self):
+        await _timeout_helper(self.channel, self.host, self.has_interacted_with)
+    
     @button(label='2', style=discord.ButtonStyle.primary, custom_id="2_button")
     async def second_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
         if self.host.id != interaction.user.id:
@@ -266,8 +313,8 @@ class CreateMatch(discord.ui.View):
                 return
             
             self.has_interacted_with = True
-        
-            new_view = UsingSmallerMaps(2)
+                    
+            new_view = UsingSmallerMaps(2, interaction.user, interaction.channel)
             # self.clear_items()
             # await interaction.response.edit_message(content='Will you be using a 3s/4s map?', view=new_view)
             await interaction.response.send_message('Will you be using a 3s/4s map?', ephemeral=True, view=new_view)
@@ -284,7 +331,7 @@ class CreateMatch(discord.ui.View):
         
             self.has_interacted_with = True
         
-            new_view = UsingSmallerMaps(4)
+            new_view = UsingSmallerMaps(4, interaction.user, interaction.channel)
             # self.clear_items()
             # await interaction.response.edit_message(content='Will you be using a 3s/4s map?', view=new_view)
             await interaction.response.send_message('Will you be using a 3s/4s map?', ephemeral=True, view=new_view)
@@ -301,7 +348,7 @@ class CreateMatch(discord.ui.View):
             self.has_interacted_with = True
         
         
-            new_view = RandomizeMap(6)
+            new_view = RandomizeMap(6, interaction.user, interaction.channel)
             # self.clear_items()
             # await interaction.response.edit_message(content='Do you want to randomize your map?', view=new_view)
             await interaction.response.send_message('Do you want to randomize your map?', ephemeral=True, view=new_view)
@@ -318,7 +365,7 @@ class CreateMatch(discord.ui.View):
             self.has_interacted_with = True
         
 
-            new_view = RandomizeMap(8)
+            new_view = RandomizeMap(8, interaction.user, interaction.channel)
             # self.clear_items()
             # await interaction.response.edit_message(content='Do you want to randomize your map?', view=new_view)
             await interaction.response.send_message('Do you want to randomize your map?', ephemeral=True, view=new_view)
