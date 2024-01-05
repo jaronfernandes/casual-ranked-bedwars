@@ -48,7 +48,7 @@ class Owner(commands.Cog):
 
     @commands.is_owner()
     @commands.hybrid_command(aliases = ['o', 'oc', 'ocmds'], brief = 'Executes an owner-only command (bot owner only)', description = 'Executes an owner-only command (bot owner only).')
-    @app_commands.describe(option='Type of admin command to execute')
+    @app_commands.describe(option='Type of owner-only command to execute')
     async def owner(self, ctx: commands.Context, option=None):
         """Display the map pool for the current season."""
         if option != None and option.lower() == 'backup':
