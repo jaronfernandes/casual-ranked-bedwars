@@ -1,4 +1,4 @@
-import discord
+import discord, os
 from discord import app_commands
 from discord.ext import commands
 from datetime import date
@@ -18,7 +18,7 @@ class Admin(commands.Cog):
 
         @discord.ui.button(label="Backup Data", style=discord.ButtonStyle.green)
         async def save(self, interaction: discord.Interaction, button: discord.ui.Button):
-            if not interaction.user.guild_permissions.administrator:
+            if not interaction.user.id != int(os.getenv('OWNER_ID')):
                 await interaction.response.send_message("You do not have permission to do this!", ephemeral=True)
                 return
             elif interaction.user.id != self.ctx.author.id:
@@ -39,7 +39,7 @@ class Admin(commands.Cog):
 
         @discord.ui.button(label="Cancel", style=discord.ButtonStyle.danger)
         async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
-            if not interaction.user.guild_permissions.administrator:
+            if not interaction.user.id != int(os.getenv('OWNER_ID')):
                 await interaction.response.send_message("You do not have permission to do this!", ephemeral=True)
                 return
             elif interaction.user.id != self.ctx.author.id:
