@@ -18,7 +18,7 @@ class Owner(commands.Cog):
 
         @discord.ui.button(label="Backup Data", style=discord.ButtonStyle.green)
         async def save(self, interaction: discord.Interaction, button: discord.ui.Button):
-            if not interaction.user.guild_permissions.administrator or interaction.user.id != int(os.getenv('OWNER_ID')):
+            if not interaction.user.id == self.bot.owner_id:
                 await interaction.response.send_message("You do not have permission to do this!", ephemeral=True)
                 return
             elif interaction.user.id != self.ctx.author.id:
@@ -39,7 +39,7 @@ class Owner(commands.Cog):
 
         @discord.ui.button(label="Cancel", style=discord.ButtonStyle.danger)
         async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
-            if not interaction.user.guild_permissions.administrator:
+            if not interaction.user.id == self.bot.owner_id:
                 await interaction.response.send_message("You do not have permission to do this!", ephemeral=True)
                 return
             elif interaction.user.id != self.ctx.author.id:
@@ -53,29 +53,27 @@ class Owner(commands.Cog):
                 await interaction.response.send_message("Did not backup data!", ephemeral=True)
 
     @commands.is_owner()
-    @commands.hybrid_command(aliases = ['a','ac', 'admin_commands', 'admin-commands', 'admin-cmds', 'admin_cmds', 'acmds', 'a-cmds'], brief = 'Executes an admin command (admins only)', description = 'Execute an admin command (admin only), or view the list of admin commands (default).')
+    @commands.hybrid_command(aliases = ['o', 'oc', 'ocmds'], brief = 'Executes an owner-only command (bot owner only)', description = 'Executes an owner-only command (bot owner only).')
     @app_commands.describe(option='Type of admin command to execute')
-    async def admin(self, ctx: commands.Context, option=None):
+    async def owner(self, ctx: commands.Context, option=None):
         """Display the map pool for the current season."""
-        if not ctx.author.guild_permissions.administrator:
-            await ctx.reply(content="You do not have the permission to do this!", mention_author=True, ephemeral=True)
-        elif option != None and option.lower() == 'backup':
+        if option != None and option.lower() == 'backup':
             await ctx.reply(content="Are you sure you want to backup the current bot data?", view=self.BackupView(ctx), mention_author=True, ephemeral=True)
-        elif option != None and option.lower() == 'reset-season':
-            await ctx.reply(content="Are you sure you want to end this season and start a new one?", view=self.SeasonUpdateView(ctx), mention_author=True, ephemeral=True)
+        elif option != None and option.lower() == 'clear-data':
+            await ctx.reply(content="Are you sure you want to clear all bot data? **WARNING: THIS IS IRREVERSIBLE!**", view=self.SeasonUpdateView(ctx), mention_author=True, ephemeral=True)
         elif option != None and not option.lower() == 'help':
             await ctx.reply(content="Invalid admin command! Please use /admin or /admin help to view the list of admin commands, or use /admin [command] to execute an admin command.", mention_author=True, ephemeral=True)
         else:  # No option specified
             help_embed = discord.Embed(
-                title="Casual Ranked Bedwars Admin Commands",
+                title="Casual Ranked Bedwars Owner Commands",
                 description="Use Slash (/) Interactions or the prefix ! to execute commands.",
-                # colour dark red
-                color=0x8b0000
+                # fairy-tale like colour
+                color=0xff69b4
             )   
 
+            help_embed.add_field(name="help", value="View all the owner-only commands", inline=False)
             help_embed.add_field(name="backup", value="Backup the current bot data", inline=False)
-            help_embed.add_field(name="score", value="Score a game", inline=False)
-            help_embed.add_field(name="reset-season", value="Reset the season to a new one", inline=False)
+            help_embed.add_field(name="clear-data", value="Reset all the current data (IRREVERSIBLE)", inline=False)
 
             try:
                 help_embed.set_thumbnail(url=ctx.guild.icon)
@@ -87,4 +85,4 @@ class Owner(commands.Cog):
             # ctx.interaction.response.send_message(help_embed, ephemeral=True)
 
 async def setup(bot):
-    await bot.add_cog(Admin(bot))
+    await bot.add_cog(Owner(bot))
