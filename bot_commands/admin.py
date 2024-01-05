@@ -29,10 +29,10 @@ class Admin(commands.Cog):
             else:
                 self.has_interacted = True
                 
-                successful_reset, season = reset_season()
+                successful_reset, season = reset_season(interaction.user.guild.id)
                 
                 if successful_reset:
-                    await interaction.response.send_message("Successfully updated to season " + int(season) + "!", ephemeral=True)
+                    await interaction.response.send_message("Successfully updated to season " + str(season) + "!", ephemeral=True)
                 else:
                     await interaction.response.send_message("There was an error setting the new season!\nPlease check the console for more information.", ephemeral=True)
 
