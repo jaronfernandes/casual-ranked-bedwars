@@ -69,9 +69,9 @@ class Owner(commands.Cog):
             else:
                 self.has_interacted = True
                 
-                successful_backup = clear_data()
+                successful_clear = clear_data()
                 
-                if successful_backup:
+                if successful_clear:
                     await interaction.response.send_message("Successfully cleared all data!", ephemeral=True)
                 else:
                     await interaction.response.send_message("There was an error clearing data!\nPlease check the console for more information.", ephemeral=True)
