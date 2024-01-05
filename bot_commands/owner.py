@@ -11,10 +11,12 @@ class Owner(commands.Cog):
     # For Backups
     class BackupView(discord.ui.View):
         has_interacted = False
+        bot: commands.Bot
 
         def __init__(self, ctx):
             super().__init__(timeout=60)
             self.ctx = ctx
+            self.bot = ctx.bot
 
         @discord.ui.button(label="Backup Data", style=discord.ButtonStyle.green)
         async def save(self, interaction: discord.Interaction, button: discord.ui.Button):
