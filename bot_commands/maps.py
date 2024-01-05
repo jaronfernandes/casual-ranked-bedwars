@@ -31,7 +31,7 @@ class Maps(commands.Cog):
     @commands.hybrid_command(aliases = ['map'], brief = 'Displays the map pool for the current season.')
     async def maps(self, ctx):
         """Display the map pool for the current season."""
-        await ctx.send(embed=self.create_maps_embed(ctx))
+        await ctx.reply(embed=self.create_maps_embed(ctx), mention_author=True, ephemeral=True)
 
 async def setup(bot):
     await bot.add_cog(Maps(bot))
