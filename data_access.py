@@ -857,7 +857,8 @@ def reset_season(guild_id: int) -> bool:
                 "user_data": data["SERVERS"][str(guild_id)]["user_data"],
                 "total_games_played": data["SERVERS"][str(guild_id)]["current_season"]["total_games_played"],
                 "start_date": data["SERVERS"][str(guild_id)]["current_season"]["start_date"],
-                "end_date": str(date.today())
+                "end_date": str(date.today()),
+                "banned_items": data["SERVERS"][str(guild_id)]["current_season"]["banned_items"]
             }
 
             new_season_number = data["SERVERS"][str(guild_id)]["current_season"]["season"] + 1
