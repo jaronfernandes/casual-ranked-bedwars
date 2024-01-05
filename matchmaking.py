@@ -71,11 +71,18 @@ def matchmake(match: Match) -> tuple[list[discord.User], dict[str, list[discord.
                     players_with_second_highest_elo = [key]
                 elif plrs[key] == second_highest_elo:  # Tie
                     players_with_second_highest_elo.append(key)
+        if len(players_with_second_highest_elo) == 0:
+            teams["Team One"].append(random.choice(players_with_highest_elo))
+            plr_list.remove(teams["Team One"][0])
+            
+            teams["Team Two"].append(random.choice(players_with_highest_elo))
+            plr_list.remove(teams["Team Two"][0])
+        else:
+            teams["Team One"].append(random.choice(players_with_second_highest_elo))  # So second highest ELO gets the first pick to make it more fair.
+            teams["Team Two"].append(random.choice(players_with_highest_elo))
 
-        teams["Team One"].append(random.choice(players_with_second_highest_elo))  # So second highest ELO gets the first pick to make it more fair.
-        teams["Team Two"].append(random.choice(players_with_highest_elo))
-        plr_list.remove(teams["Team One"][0])
-        plr_list.remove(teams["Team Two"][0])
+            plr_list.remove(teams["Team One"][0])
+            plr_list.remove(teams["Team Two"][0])
 
     print([player.name for player in teams["Team One"]])
     print([player.name for player in teams["Team Two"]])
