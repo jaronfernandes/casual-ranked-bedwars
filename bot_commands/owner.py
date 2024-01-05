@@ -2,7 +2,7 @@ import discord, os
 from discord import app_commands
 from discord.ext import commands
 from datetime import date
-from data_access import backup_data
+from data_access import backup_data, clear_data
 
 class Owner(commands.Cog):
     def __init__(self, bot):
@@ -48,6 +48,46 @@ class Owner(commands.Cog):
                 self.has_interacted = True
                 await interaction.response.send_message("Did not backup data!", ephemeral=True)
 
+    # For clearing data
+    class ClearDataView(discord.ui.View):
+        has_interacted = False
+        bot: commands.Bot
+
+        def __init__(self, ctx):
+            super().__init__(timeout=60)
+            self.ctx = ctx
+            self.bot = ctx.bot
+
+        @discord.ui.button(label="Clear Data", style=discord.ButtonStyle.green)
+        async def save(self, interaction: discord.Interaction, button: discord.ui.Button):
+            if not interaction.user.id == self.bot.owner_id:
+                await interaction.response.send_message("You do not have permission to do this!", ephemeral=True)
+                return
+            elif self.has_interacted:
+                await interaction.response.send_message("You have already responded to this message!", ephemeral=True)
+                return
+            else:
+                self.has_interacted = True
+                
+                successful_backup = clear_data()
+                
+                if successful_backup:
+                    await interaction.response.send_message("Successfully cleared all data!", ephemeral=True)
+                else:
+                    await interaction.response.send_message("There was an error clearing data!\nPlease check the console for more information.", ephemeral=True)
+
+        @discord.ui.button(label="Cancel", style=discord.ButtonStyle.danger)
+        async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
+            if not interaction.user.id == self.bot.owner_id:
+                await interaction.response.send_message("You do not have permission to do this!", ephemeral=True)
+                return
+            elif self.has_interacted:
+                await interaction.response.send_message("You have already responded to this message!", ephemeral=True)
+                return
+            else:
+                self.has_interacted = True
+                await interaction.response.send_message("Did not clear data!", ephemeral=True)
+
     @commands.is_owner()
     @commands.hybrid_command(aliases = ['o', 'oc', 'ocmds'], brief = 'Executes an owner-only command (bot owner only)', description = 'Executes an owner-only command (bot owner only).')
     @app_commands.describe(option='Type of owner-only command to execute')
@@ -56,7 +96,7 @@ class Owner(commands.Cog):
         if option != None and option.lower() == 'backup':
             await ctx.reply(content="Are you sure you want to backup the current bot data?", view=self.BackupView(ctx), mention_author=True, ephemeral=True)
         elif option != None and option.lower() == 'clear-data':
-            await ctx.reply(content="Are you sure you want to clear all bot data? **WARNING: THIS IS IRREVERSIBLE!**", view=self.SeasonUpdateView(ctx), mention_author=True, ephemeral=True)
+            await ctx.reply(content="Are you sure you want to clear ALL bot data? **WARNING: THIS IS IRREVERSIBLE!**", view=self.ClearDataView(ctx), mention_author=True, ephemeral=True)
         elif option != None and not option.lower() == 'help':
             await ctx.reply(content="Invalid admin command! Please use /admin or /admin help to view the list of admin commands, or use /admin [command] to execute an admin command.", mention_author=True, ephemeral=True)
         else:  # No option specified
