@@ -844,6 +844,42 @@ def clear_data() -> bool:
         print(e)
         print("Error clearing data.")
         return False
+    
+
+def reset_season(guild_id: int) -> bool:
+    """Reset the season for a guild."""
+    try:
+        with open("data", "r") as file:
+            string = file.read()
+            data = json.loads(string)
+
+            data["SERVERS"][str(guild_id)]["previous_season_statistics"][str(data["SERVERS"][str(guild_id)]["current_season"]["season"])] = {
+                "user_data": data["SERVERS"][str(guild_id)]["user_data"],
+                "total_games_played": data["SERVERS"][str(guild_id)]["current_season"]["total_games_played"],
+                "start_date": data["SERVERS"][str(guild_id)]["current_season"]["start_date"],
+                "end_date": str(date.today())
+            }
+
+            new_season_number = data["SERVERS"][str(guild_id)]["current_season"]["season"] + 1
+
+            data["SERVERS"][str(guild_id)]["current_season"] = {
+                "season": new_season_number,
+                "total_games_played": 0,
+                "start_date": str(date.today()),
+                "end_date": "N/A",
+                "banned_items": ["Knockback Stick", "Pop-up Towers", "Obsidian", "Punch Bows"]
+            }
+
+            data["SERVERS"][str(guild_id)]["games_played"] = 0
+            data["SERVERS"][str(guild_id)]["user_data"] = {}
+
+            with open("data", "w") as jsonFile:
+                json.dump(data, jsonFile)
+                return (True, new_season_number)
+    except Exception as e:
+        print(e)
+        print("Error resetting season.")
+        return (False, -1)
 
 
 async def setup_elo_roles(guild: discord.Guild) -> bool:
