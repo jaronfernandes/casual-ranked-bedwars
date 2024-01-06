@@ -8,7 +8,7 @@ def _get_role_by_elo(user_elo: int, elo_dict: dict) -> (int, int):
     if user_elo < elo:  # In other cases, the rounding suffices.
         elo = elo - 100
     
-    return (elo, int(elo_dict[elo][4]))
+    return (elo, int(elo_dict[str(elo)][4]))
 
 
 def _score_player(guild_id: int, player: discord.User, user_elo: int, killer_list: list[discord.User], elo_dict: dict, won: bool, interaction: discord.Interaction) -> (int, int, int):
@@ -22,16 +22,16 @@ def _score_player(guild_id: int, player: discord.User, user_elo: int, killer_lis
 
     if player in killer_list:
         if player == killer_list[0]:
-            added_elo = int(elo_dict[elo][5])
+            added_elo = int(elo_dict[str(elo)][5])
         elif player == killer_list[1]:
-            added_elo = int(elo_dict[elo][6])
+            added_elo = int(elo_dict[str(elo)][6])
         else:
-            added_elo = int(elo_dict[elo][7])
+            added_elo = int(elo_dict[str(elo)][7])
 
     if won:
-        added_elo += int(elo_dict[elo][2])
+        added_elo += int(elo_dict[str(elo)][2])
     else:
-        added_elo += int(elo_dict[elo][2])
+        added_elo += int(elo_dict[str(elo)][3])
 
     updated_elo = max(0, user_elo + added_elo)
     _, role_to_get = _get_role_by_elo(updated_elo, elo_dict)
