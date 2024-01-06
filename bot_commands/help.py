@@ -21,7 +21,7 @@ class Help(commands.Cog):
         help_embed.add_field(name="season", value="View the current season.", inline=False)
         help_embed.add_field(name="rules", value="View the rules and instructions for Casual Ranked Bedwars.", inline=False)
         help_embed.add_field(name="maps", value="View the maps currently in rotation.", inline=False)
-        help_embed.add_field(name="lb", value="View the leaderboard.", inline=False)
+        help_embed.add_field(name="leaderboard", value="View the leaderboard.", inline=False)
         help_embed.add_field(name="winners", value="View the winners of the previous season.", inline=False)
         help_embed.add_field(name="admin [command]", value="All admin commands (default displays a list of admin commands)", inline=False)
 
