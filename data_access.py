@@ -3,6 +3,7 @@ from datetime import date
 from entities import Match, MatchMakeEmbed, TeamMakeEmbed
 from discord.ui import button, select
 from matchmaking import matchmake
+from scoring import scoring_algorithm
 
 
 ## CONSTANTS
@@ -485,6 +486,45 @@ class JoinGame(discord.ui.View):
             await interaction.response.send_message(content="<@" + str(interaction.user.id)+'> cancelled the match!', view=self)
 
 
+class SetupELORoles(discord.ui.View):
+    has_interacted_with: bool
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.has_interacted_with = False
+
+    @button(label='Setup Roles', style=discord.ButtonStyle.green, custom_id="setup_roles_button")
+    async def randomize_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if self.has_interacted_with:
+            await interaction.response.send_message('This message has expired!', ephemeral=True)
+            return
+        
+        self.has_interacted_with = True
+        self.clear_items()
+        await interaction.response.defer()
+        # await asyncio.sleep()
+        if await setup_elo_roles(interaction.guild):
+            await interaction.followup.send(content='Roles have been set up!', ephemeral=True)
+            # await interaction.response.edit_message(content='Roles have been set up!', view=self)
+            return
+        else:
+            await interaction.followup.send(content='Roles failed to set up. Please fix your roles or try again. \n\
+                Otherwise, submit an issue to https://github.com/jaronfernandes/casual-ranked-bedwars', ephemeral=True)
+            return
+        
+
+    @button(label='Cancel', style=discord.ButtonStyle.danger, custom_id="cancel_button")
+    async def button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if self.has_interacted_with:
+            await interaction.response.send_message('This message has expired!', ephemeral=True)
+            return
+        
+        self.has_interacted_with = True
+
+        self.clear_items()
+        await interaction.response.edit_message(content='You canceled the role setup!', view=self)
+
+
 def MatchMakeView(match: Match, captain_choosing: int, user: discord.User, teams: dict[str, list[discord.User]], players_remaining: list[discord.User]) -> discord.ui.View:
     """Return a MatchMakeView."""
     options_list = [discord.SelectOption(label=player.name, value=player.id) for player in players_remaining]
@@ -694,7 +734,7 @@ class TeamScoreView(discord.ui.View):
 
             self.clear_items()
             self.match.set_ready()
-            scoring_data = {"Winning Team": self.teams["Team One"], "Top Killers": []}
+            scoring_data = {"Winning Team": self.teams["Team One"], "Top Killers": [], "Losing Team": self.teams["Team Two"]}
             players = self.match.get_players().copy()
             new_view = TopKillersView(self.match, players, scoring_data, self.score_view, self.interaction)
             await interaction.response.edit_message(content="Select the top killers in the game.", view=new_view)
@@ -712,7 +752,7 @@ class TeamScoreView(discord.ui.View):
 
             self.clear_items()
             self.match.set_ready()
-            scoring_data = {"Winning Team": self.teams["Team Two"], "Top Killers": []}
+            scoring_data = {"Winning Team": self.teams["Team Two"], "Top Killers": [], "Losing Team": self.teams["Team One"]}
             players = self.match.get_players().copy()
             new_view = TopKillersView(self.match, players, scoring_data, self.score_view, self.interaction)
             await interaction.response.edit_message(content="Select the top killers in the game.", view=new_view)
@@ -786,8 +826,13 @@ def TopKillersView(match: Match, players: dict, scoring_data: dict, score_view: 
                 self.clear_items()
                 if len(self.scoring_data["Top Killers"]) == 3 or \
                 (self.match.get_max_players() == 2 and len(self.scoring_data["Top Killers"]) == 2):
-                    await interaction.response.edit_message(content=f"All users of match ID {str(self.match.get_id())} have been scored by <@{interaction.user.id}>!", view=self)
-                    del _games_running[self.matching_embed.match.id]  # Delete the game from the running games.
+                    successful_scoring = score_game(self.scoring_data, self.interaction)
+                    if successful_scoring:
+                        await interaction.response.edit_message(content=f"All users of match ID {str(self.match.get_id())} have been scored by <@{interaction.user.id}>!", view=self)
+                        del _games_running[self.matching_embed.match.id]  # Delete the game from the running games.
+                    else:
+                        self.score_view.has_interacted_with = False
+                        await interaction.response.edit_message(content=f"An error occurred while scoring match ID {str(self.match.get_id())}! Please try again or view the console log for more details.", view=self)
                 else:
                     new_view = TopKillersView(self.match, players, self.scoring_data, self.score_view, self.interaction, killer=killer + 1)
                     await interaction.response.edit_message(content="Select the top killers in the game.", view=new_view)
@@ -1200,6 +1245,22 @@ def get_elo_distribution(guild_id: int) -> dict:
         print(e)
         print("Error occurred")
         return None
+    
+
+async def score_game(scoring_data: dict, interaction: discord.Interaction) -> bool:
+    """Scores and associates new ELO and roles to users appropriately."""
+    guild_id = interaction.guild.id
+    elo_dict = get_elo_distribution(guild_id)
+
+    for elo_key in elo_dict:  # Check if the roles exist
+        if elo_dict[elo_key][4] == "N/A" or all(elo_dict[elo_key][4] != str(role.id) for role in interaction.guild.roles):
+            # Admin by default.
+            new_view = SetupELORoles()
+            await interaction.response.send_message(content="It seems the roles for the ELO distribution have not been set up yet. Would you like to set them up now?\n__**Note:**__ It will say there was an error; don't worry. You will have to rescore the match. ", ephemeral=True, mention_author=True, view=new_view)
+            return False
+    
+    scoring_algorithm(guild_id, scoring_data, elo_dict, interaction.guild.id)
+
     
 
 def get_admin_role(guild_id: int) -> str:
