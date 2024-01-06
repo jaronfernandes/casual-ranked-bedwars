@@ -826,7 +826,7 @@ def TopKillersView(match: Match, players: dict, scoring_data: dict, score_view: 
                 self.clear_items()
                 if len(self.scoring_data["Top Killers"]) == 3 or \
                 (self.match.get_max_players() == 2 and len(self.scoring_data["Top Killers"]) == 2):
-                    successful_scoring = score_game(self.scoring_data, self.interaction)
+                    successful_scoring = score_game(self.scoring_data, self.interaction, self.match.get_players())
                     if successful_scoring:
                         await interaction.response.edit_message(content=f"All users of match ID {str(self.match.get_id())} have been scored by <@{interaction.user.id}>!", view=self)
                         del _games_running[self.matching_embed.match.id]  # Delete the game from the running games.
@@ -1247,10 +1247,11 @@ def get_elo_distribution(guild_id: int) -> dict:
         return None
     
 
-async def score_game(scoring_data: dict, interaction: discord.Interaction) -> bool:
+async def score_game(scoring_data: dict, interaction: discord.Interaction, players: dict) -> bool:
     """Scores and associates new ELO and roles to users appropriately."""
     guild_id = interaction.guild.id
     elo_dict = get_elo_distribution(guild_id)
+    something_went_wrong = False
 
     for elo_key in elo_dict:  # Check if the roles exist
         if elo_dict[elo_key][4] == "N/A" or all(elo_dict[elo_key][4] != str(role.id) for role in interaction.guild.roles):
@@ -1259,8 +1260,68 @@ async def score_game(scoring_data: dict, interaction: discord.Interaction) -> bo
             await interaction.response.send_message(content="It seems the roles for the ELO distribution have not been set up yet. Would you like to set them up now?\n__**Note:**__ It will say there was an error; don't worry. You will have to rescore the match. ", ephemeral=True, mention_author=True, view=new_view)
             return False
     
-    scoring_algorithm(guild_id, scoring_data, elo_dict, interaction.guild.id)
+    new_player_elos = scoring_algorithm(guild_id, scoring_data, players, elo_dict, interaction)
 
+    for player in new_player_elos:
+        try: 
+            # Get the player's current ELO
+            player_data = get_player_data_from_json_file(player, guild_id)
+            current_elo = int(player_data["ELO"])
+            new_elo = max(0, current_elo + new_player_elos[player])
+            player_data["ELO"] = new_elo
+
+            # Get the player's current role
+            player_roles = interaction.guild.get_member(player.id).roles
+            current_role = None
+
+            all_elo_dict_roles = {int(elo_dict[elo_key][5]) for elo_key in elo_dict if elo_dict[elo_key][4] != "N/A"}
+            for role in player_roles:
+                if role.id in all_elo_dict_roles:
+                    current_role = role
+                    break
+
+            # Get the player's new role
+            new_role = None
+            for elo_key in elo_dict:
+                if elo_dict[elo_key][4] == "N/A":
+                    continue
+                if elo_key > new_elo:
+                    continue
+                if new_role is None:
+                    new_role = interaction.guild.get_role(int(elo_dict[elo_key][4]))
+                else:
+                    if elo_key > int(elo_dict[elo_key][4]):
+                        new_role = interaction.guild.get_role(int(elo_dict[elo_key][4]))
+
+            # Update the player's role
+            if current_role is not None and new_role is not None:
+                if current_role.id != new_role.id:
+                    await interaction.guild.get_member(player.id).remove_roles(current_role)
+                    await interaction.guild.get_member(player.id).add_roles(new_role)
+            elif current_role is None and new_role is not None:
+                await interaction.guild.get_member(player.id).add_roles(new_role)
+            elif current_role is not None and new_role is None:
+                await interaction.guild.get_member(player.id).remove_roles(current_role)
+
+            # Update the player's data
+            player_data["ELO"] = new_elo
+            player_data["Wins"] += 1 if scoring_data["Winning Team"] == player else 0
+            player_data["Losses"] += 1 if scoring_data["Losing Team"] == player else 0
+            player_data["Winstreak"] += 1 if scoring_data["Winning Team"] == player else 0
+            player_data["Winstreak"] = 0 if scoring_data["Losing Team"] == player else player_data["Winstreak"]
+
+            # Update the player's data in the json file
+            with open("data", "r") as file:
+                string = file.read()
+                data = json.loads(string)
+                data["SERVERS"][str(guild_id)]["user_data"][str(player.id)] = player_data
+                with open("data", "w") as jsonFile:
+                    json.dump(data, jsonFile)
+        except:
+            something_went_wrong = True
+            print(f"Error scoring player {player.name}.")
+    
+    return not something_went_wrong
     
 
 def get_admin_role(guild_id: int) -> str:
