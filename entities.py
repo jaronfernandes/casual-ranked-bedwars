@@ -77,6 +77,10 @@ class Match:
     def get_randomized_captains(self) -> bool:
         """Return whether the match has randomized captains."""
         return self.is_randomized_captains
+    
+    def get_teams(self) -> dict[str: list[discord.User]]:
+        """Return the teams in the match."""
+        return self.teams
 
     def player_in_match(self, player: discord.User) -> bool:
         """Return whether player is in the match."""
