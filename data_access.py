@@ -826,7 +826,7 @@ def TopKillersView(match: Match, players: dict, scoring_data: dict, score_view: 
                 self.clear_items()
                 if len(self.scoring_data["Top Killers"]) == 3 or \
                 (self.match.get_max_players() == 2 and len(self.scoring_data["Top Killers"]) == 2):
-                    successful_scoring = score_game(self.scoring_data, self.interaction, self.match.get_players())
+                    successful_scoring = await score_game(self.scoring_data, self.interaction, self.match.get_players())
                     if successful_scoring:
                         await interaction.response.edit_message(content=f"All users of match ID {str(self.match.get_id())} have been scored by <@{interaction.user.id}>!", view=self)
                         del _games_running[self.matching_embed.match.id]  # Delete the game from the running games.
@@ -1281,11 +1281,12 @@ async def score_game(scoring_data: dict, interaction: discord.Interaction, playe
                 await member.add_roles(interaction.guild.get_role(new_role))
 
             # Update the player's data
+            member.edit(nick=f"{member.nick} [{str(new_elo)}]")
             player_data["ELO"] = new_elo
-            player_data["Wins"] += 1 if scoring_data["Winning Team"] == player else player_data["Wins"]
-            player_data["Losses"] += 1 if scoring_data["Losing Team"] == player else player_data["Losses"]
-            player_data["Winstreak"] += 1 if scoring_data["Winning Team"] == player else 0
-            player_data["Winstreak"] = 0 if scoring_data["Losing Team"] == player else player_data["Winstreak"]
+            player_data["Wins"] += 1 if player in scoring_data["Winning Team"] else player_data["Wins"]
+            player_data["Losses"] += 1 if player in scoring_data["Losing Team"] else player_data["Losses"]
+            player_data["Winstreak"] += 1 if player in scoring_data["Winning Team"] else 0
+            player_data["Winstreak"] = 0 if player in scoring_data["Losing Team"] else player_data["Winstreak"]
 
             # Update the player's data in the json file
             with open("data", "r") as file:
