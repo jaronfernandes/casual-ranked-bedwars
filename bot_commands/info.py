@@ -3,46 +3,7 @@ from discord.ext import commands
 from discord.ui import Button, button
 from typing import Optional, Union
 import asyncio
-from data_access import get_elo_distribution, get_admin_role, setup_elo_roles
-
-
-class SetupELORoles(discord.ui.View):
-    has_interacted_with: bool
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.has_interacted_with = False
-
-    @button(label='Setup Roles', style=discord.ButtonStyle.green, custom_id="setup_roles_button")
-    async def randomize_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if self.has_interacted_with:
-            await interaction.response.send_message('This message has expired!', ephemeral=True)
-            return
-        
-        self.has_interacted_with = True
-        self.clear_items()
-        await interaction.response.defer()
-        # await asyncio.sleep()
-        if await setup_elo_roles(interaction.guild):
-            await interaction.followup.send(content='Roles have been set up!', ephemeral=True)
-            # await interaction.response.edit_message(content='Roles have been set up!', view=self)
-            return
-        else:
-            await interaction.followup.send(content='Roles failed to set up. Please fix your roles or try again. \n\
-                Otherwise, submit an issue to https://github.com/jaronfernandes/casual-ranked-bedwars', ephemeral=True)
-            return
-        
-
-    @button(label='Cancel', style=discord.ButtonStyle.danger, custom_id="cancel_button")
-    async def button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if self.has_interacted_with:
-            await interaction.response.send_message('This message has expired!', ephemeral=True)
-            return
-        
-        self.has_interacted_with = True
-
-        self.clear_items()
-        await interaction.response.edit_message(content='You canceled the role setup!', view=self)
+from data_access import get_elo_distribution, get_admin_role, SetupELORoles
 
 
 class Info(commands.Cog):
