@@ -1266,47 +1266,24 @@ async def score_game(scoring_data: dict, interaction: discord.Interaction, playe
         try: 
             # Get the player's current ELO
             player_data = get_player_data_from_json_file(player, guild_id)
-            current_elo = int(player_data["ELO"])
-            new_elo = max(0, current_elo + new_player_elos[player])
-            player_data["ELO"] = new_elo
+            new_elo, current_role, new_role = new_player_elos[player]
 
-            # Get the player's current role
-            player_roles = interaction.guild.get_member(player.id).roles
-            current_role = None
-
-            all_elo_dict_roles = {int(elo_dict[elo_key][5]) for elo_key in elo_dict if elo_dict[elo_key][4] != "N/A"}
-            for role in player_roles:
-                if role.id in all_elo_dict_roles:
-                    current_role = role
-                    break
-
-            # Get the player's new role
-            new_role = None
-            for elo_key in elo_dict:
-                if elo_dict[elo_key][4] == "N/A":
-                    continue
-                if elo_key > new_elo:
-                    continue
-                if new_role is None:
-                    new_role = interaction.guild.get_role(int(elo_dict[elo_key][4]))
-                else:
-                    if elo_key > int(elo_dict[elo_key][4]):
-                        new_role = interaction.guild.get_role(int(elo_dict[elo_key][4]))
+            member = interaction.guild.get_member(player.id)
+            has_role = member.get_role(current_role)
 
             # Update the player's role
-            if current_role is not None and new_role is not None:
-                if current_role.id != new_role.id:
-                    await interaction.guild.get_member(player.id).remove_roles(current_role)
-                    await interaction.guild.get_member(player.id).add_roles(new_role)
-            elif current_role is None and new_role is not None:
-                await interaction.guild.get_member(player.id).add_roles(new_role)
-            elif current_role is not None and new_role is None:
-                await interaction.guild.get_member(player.id).remove_roles(current_role)
+            if current_role != new_role:
+                if has_role is not None:
+                    await member.remove_roles(interaction.guild.get_role(current_role))
+                
+                await member.add_roles(interaction.guild.get_role(new_role))
+            elif has_role is None:
+                await member.add_roles(interaction.guild.get_role(new_role))
 
             # Update the player's data
             player_data["ELO"] = new_elo
-            player_data["Wins"] += 1 if scoring_data["Winning Team"] == player else 0
-            player_data["Losses"] += 1 if scoring_data["Losing Team"] == player else 0
+            player_data["Wins"] += 1 if scoring_data["Winning Team"] == player else player_data["Wins"]
+            player_data["Losses"] += 1 if scoring_data["Losing Team"] == player else player_data["Losses"]
             player_data["Winstreak"] += 1 if scoring_data["Winning Team"] == player else 0
             player_data["Winstreak"] = 0 if scoring_data["Losing Team"] == player else player_data["Winstreak"]
 
