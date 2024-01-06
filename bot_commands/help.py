@@ -17,7 +17,6 @@ class Help(commands.Cog):
 
         help_embed.add_field(name="help", value="View the help menu.", inline=False)
         help_embed.add_field(name="play", value="Start a new game.", inline=False)
-        help_embed.add_field(name="queue", value="View the queue for your current game.", inline=False)
         help_embed.add_field(name="stats", value="Get your current season statistics.", inline=False)
         help_embed.add_field(name="season", value="View the current season.", inline=False)
         help_embed.add_field(name="rules", value="View the rules and instructions for Casual Ranked Bedwars.", inline=False)
