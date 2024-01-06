@@ -586,8 +586,8 @@ def MatchMakeView(match: Match, captain_choosing: int, user: discord.User, teams
 
                 self.clear_items()
                 for player in self.matching_embed.match.players:
-                    del get_players_in_game[player.name]
-                del get_games_running[self.matching_embed.match.id]
+                    del get_players_in_game()[player.name]
+                del get_games_running()[self.matching_embed.match.id]
                 await interaction.response.send_message(content="<@" + str(interaction.user.id)+'> cancelled the match!', view=self)
     
     return _MatchMakeView(match, captain_choosing, user, teams, players_remaining)
@@ -645,8 +645,8 @@ class ScoringView(discord.ui.View):
 
             self.clear_items()
             for player in self.matching_embed.match.players:
-                del get_players_in_game[player.name]
-            del get_games_running[self.matching_embed.match.id]
+                del get_players_in_game()[player.name]
+            del get_games_running()[self.matching_embed.match.id]
             await interaction.response.send_message(content="<@" + str(interaction.user.id)+'> cancelled the match!', view=self)
 
 
