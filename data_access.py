@@ -432,9 +432,9 @@ class JoinGame(discord.ui.View):
                     self.matching_embed.match.set_teams(teams_so_far)
 
                     new_embed = TeamMakeEmbed(self.matching_embed.match)
-                    # new_view = ScoringView(self.matching_embed.match, interaction.user)
-                    new_view = MatchMakeView(self.matching_embed.match, captains[0].id, interaction.user, teams_so_far, remaining_players)
-                    await interaction.response.edit_message(content='The game is ready! Please send a screenshot of the game showing the winners and top killers once the game has ended.', embed=new_embed.get_embed(), view=self) # view=new_view
+                    new_view = ScoringView(self.matching_embed.match, interaction.user, self.matching_embed.match.get_teams())
+                    # new_view = MatchMakeView(self.matching_embed.match, captains[0].id, interaction.user, teams_so_far, remaining_players)
+                    await interaction.response.edit_message(content='The game is ready! Please send a screenshot of the game showing the winners and top killers once the game has ended.', embed=new_embed.get_embed(), view=new_view) # view=new_view
                 else:
                     print("here")
                     remaining_players, teams_so_far = matchmake(self.matching_embed.match)
@@ -487,7 +487,7 @@ class JoinGame(discord.ui.View):
 
 def MatchMakeView(match: Match, captain_choosing: int, user: discord.User, teams: dict[str, list[discord.User]], players_remaining: list[discord.User]) -> discord.ui.View:
     """Return a MatchMakeView."""
-    options_list = [discord.SelectOption(label=player.name.lower(), value=player.id) for player in players_remaining]
+    options_list = [discord.SelectOption(label=player.name, value=player.id) for player in players_remaining]
     print("HIIII")
     print(options_list)
 
@@ -564,7 +564,9 @@ def MatchMakeView(match: Match, captain_choosing: int, user: discord.User, teams
                     self.clear_items()
                     print([player.name for player in self.match.teams["Team One"]])
                     print([player.name for player in self.match.teams["Team Two"]])
-                    await interaction.response.edit_message(content="The game is now ready! Please send a screenshot of the game showing the winners and top killers once the game has ended.", view=self, embed=teams_embed.get_embed())
+                    await interaction.response.edit_message(content="The game is now ready! Please send a screenshot of the game showing the winners and top killers once the game has ended.", view=new_view, embed=teams_embed.get_embed())
+                    for player in self.matching_embed.match.players:  # Their game may be done before it gets scored, so might as well let them create a new one.
+                        del _players_in_game[player.name]
                     return
 
                 teams_embed = TeamMakeEmbed(self.match)
@@ -590,6 +592,7 @@ def MatchMakeView(match: Match, captain_choosing: int, user: discord.User, teams
     
     return _MatchMakeView(match, captain_choosing, user, teams, players_remaining)
 
+
 class ScoringView(discord.ui.View):
     """View for scoring a game."""
     match: Match
@@ -598,7 +601,7 @@ class ScoringView(discord.ui.View):
     has_interacted_with: bool
 
     def __init__(self, match: Match, user: discord.User, teams: dict[str, list[discord.User]]):
-        super().__init__()
+        super().__init__(timeout=None)  # Don't want a timeout here, since scorers may take a while OR they may want to wait for the game to end.
         self.has_interacted_with = False
         self.match = match
         self.teams = teams
@@ -626,9 +629,8 @@ class ScoringView(discord.ui.View):
 
             self.clear_items()
             self.match.set_ready()
-            teams_embed = TeamMakeEmbed(self.match)
-            new_view = ScoringView(self.match, interaction.user, teams_embed.match.teams)
-            await interaction.response.edit_message(content="The game is now ready! Please send a screenshot of the game showing the winners and top killers once the game has ended.", view=self)
+            new_view = TeamScoreView(self.match, self, interaction)
+            await interaction.response.send_message(content="Please select the winning team", view=new_view)
     
     @button(label='Cancel', style=discord.ButtonStyle.danger, custom_id="cancel_match_button")
     async def cancel_match(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -647,6 +649,165 @@ class ScoringView(discord.ui.View):
             del get_games_running[self.matching_embed.match.id]
             await interaction.response.send_message(content="<@" + str(interaction.user.id)+'> cancelled the match!', view=self)
 
+
+class TeamScoreView(discord.ui.View):
+    """View for scoring a game."""
+    interaction: discord.Interaction
+    match: Match
+    teams: dict[str, list[discord.User]]
+    has_interacted_with: bool
+    score_view: ScoringView
+
+    def __init__(self, match: Match, score_view: ScoringView, interaction: discord.Interaction) -> None:
+        super().__init__(timeout=TIMEOUT_LENGTH)
+        self.has_interacted_with = False
+        self.match = match
+        self.teams = match.get_teams()
+        self.interaction = interaction
+        self.score_view = score_view
+        
+
+    def get_embed(self) -> discord.Embed:
+        """Return the embed."""
+        return self.matching_embed.get_embed()
+    
+    def get_file(self) -> discord.File:
+        """Return the file."""
+        return self.matching_embed.get_file()
+    
+
+    async def on_timeout(self):
+        if not self.has_interacted_with:
+            await self.interaction.channel.send(content=f'<@{self.interaction.user.id}> Your scoring session has timed out! Please score the match again through the embed or use the "score" command to do it manually!')
+            self.score_view.has_interacted_with = False
+    
+    @button(label='Team 1', style=discord.ButtonStyle.green, custom_id="score_button_team_one")
+    async def team_one_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message('You are not an administrator!', ephemeral=True)
+        else:
+            if self.has_interacted_with:
+                await interaction.response.send_message('This message has expired!', ephemeral=True)
+                return
+
+            self.has_interacted_with = True
+
+            self.clear_items()
+            self.match.set_ready()
+            scoring_data = {"Winning Team": self.teams["Team One"], "Top Killers": []}
+            players = self.match.get_players().copy()
+            new_view = TopKillersView(self.match, players, scoring_data, self.score_view, self.interaction)
+            await interaction.response.edit_message(content="Select the top killers in the game.", view=new_view)
+
+    @button(label='Team 2', style=discord.ButtonStyle.green, custom_id="score_button_team_two")
+    async def team_two_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message('You are not an administrator!', ephemeral=True)
+        else:
+            if self.has_interacted_with:
+                await interaction.response.send_message('This message has expired!', ephemeral=True)
+                return
+
+            self.has_interacted_with = True
+
+            self.clear_items()
+            self.match.set_ready()
+            scoring_data = {"Winning Team": self.teams["Team Two"], "Top Killers": []}
+            players = self.match.get_players().copy()
+            new_view = TopKillersView(self.match, players, scoring_data, self.score_view, self.interaction)
+            await interaction.response.edit_message(content="Select the top killers in the game.", view=new_view)
+
+
+    @button(label='Cancel', style=discord.ButtonStyle.danger, custom_id="cancel_match_button")
+    async def cancel_score(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message('You are not an administrator!', ephemeral=True)
+        else:
+            if self.has_interacted_with:
+                await interaction.response.send_message('This message has expired!', ephemeral=True)
+                return
+        
+            self.clear_items()
+            self.has_interacted_with = True
+            self.score_view.has_interacted_with = False
+            await interaction.response.edit_message(content="You cancelled the scoring session!", view=self)
+
+
+def TopKillersView(match: Match, players: dict, scoring_data: dict, score_view: ScoringView, interaction: discord.Interaction, killer: int = 1) -> discord.ui.View:
+    options = [discord.SelectOption(label=player.name, value=player.id) for player in players]
+
+    class _TopKillersView(discord.ui.View):
+        """View for joining a game."""
+        match: Match
+        players: dict
+        TeamMakeEmbed: TeamMakeEmbed
+        has_interacted_with: bool
+        scoring_data: dict
+        score_view: ScoringView
+        interaction: discord.Interaction
+
+        def __init__(self, match: Match, players: dict, scoring_data: dict, score_view: ScoringView, interaction: discord.Interaction) -> None:
+            super().__init__(timeout=TIMEOUT_LENGTH)
+            self.has_interacted_with = False
+            self.match = match
+            self.players = players
+            self.matching_embed = TeamMakeEmbed(match)
+            self.scoring_data = scoring_data
+            self.interaction = interaction
+            self.score_view = score_view
+            
+        def get_embed(self) -> discord.Embed:
+            """Return the embed."""
+            return self.matching_embed.get_embed()
+        
+        def get_file(self) -> discord.File:
+            """Return the file."""
+            return self.matching_embed.get_file()
+        
+        def on_timeout(self):
+            if not self.has_interacted_with:
+                self.interaction.channel.send(content=f'<@{self.interaction.user.id}> Your scoring session has timed out! Please score the match again through the embed or use the "score" command to do it manually!')
+                self.score_view.has_interacted_with = False
+        
+        @select(placeholder='Select the #' + str(killer) + ' Killer', options=options, custom_id="select_player")
+        async def select_player(self, interaction: discord.Interaction, select: discord.ui.Select):
+            if not interaction.user.guild_permissions.administrator:
+                await interaction.response.send_message('You are not an administrator!', ephemeral=True)
+            else:
+                if self.has_interacted_with:
+                    await interaction.response.send_message('This message has expired!', ephemeral=True)
+                    return
+
+                self.has_interacted_with = True
+
+                player_chosen = interaction.guild.get_member(int(select.values[0]))
+                del players[player_chosen]
+                self.scoring_data["Top Killers"].append(player_chosen)
+                self.clear_items()
+                if len(self.scoring_data["Top Killers"]) == 3 or \
+                (self.match.get_max_players() == 2 and len(self.scoring_data["Top Killers"]) == 2):
+                    await interaction.response.edit_message(content="All users of this match have been scored!", view=self)
+                    del _games_running[self.matching_embed.match.id]  # Delete the game from the running games.
+                else:
+                    new_view = TopKillersView(self.match, players, self.scoring_data, self.score_view, self.interaction, killer=killer + 1)
+                    await interaction.response.edit_message(content="Select the top killers in the game.", view=new_view)
+
+        @button(label='Cancel', style=discord.ButtonStyle.danger, custom_id="cancel_match_button")
+        async def cancel_score(self, interaction: discord.Interaction, button: discord.ui.Button):
+            if not interaction.user.guild_permissions.administrator:
+                await interaction.response.send_message('You are not an administrator!', ephemeral=True)
+            else:
+                if self.has_interacted_with:
+                    await interaction.response.send_message('This message has expired!', ephemeral=True)
+                    return
+            
+                self.clear_items()
+                self.has_interacted_with = True
+                self.score_view.has_interacted_with = False
+                await interaction.response.edit_message(content="You cancelled the scoring session!", view=self)
+
+    return _TopKillersView(match, players, scoring_data, score_view, interaction)
+            
 
 ## FUNCTIONS
 
