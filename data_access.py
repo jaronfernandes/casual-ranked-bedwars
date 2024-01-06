@@ -393,7 +393,7 @@ class JoinGame(discord.ui.View):
     has_interacted_with: bool
 
     def __init__(self, match: Match, user: discord.User):
-        super().__init__()
+        super().__init__(timeout=None)
         self.has_interacted_with = False
         self.matching_embed = MatchMakeEmbed(match)
 
@@ -565,7 +565,7 @@ def MatchMakeView(match: Match, captain_choosing: int, user: discord.User, teams
                     print([player.name for player in self.match.teams["Team One"]])
                     print([player.name for player in self.match.teams["Team Two"]])
                     await interaction.response.edit_message(content="The game is now ready! Please send a screenshot of the game showing the winners and top killers once the game has ended.", view=new_view, embed=teams_embed.get_embed())
-                    for player in self.matching_embed.match.players:  # Their game may be done before it gets scored, so might as well let them create a new one.
+                    for player in self.match.players:  # Their game may be done before it gets scored, so might as well let them create a new one.
                         del _players_in_game[player.name]
                     return
 
@@ -630,7 +630,7 @@ class ScoringView(discord.ui.View):
             self.clear_items()
             self.match.set_ready()
             new_view = TeamScoreView(self.match, self, interaction)
-            await interaction.response.send_message(content="Please select the winning team", view=new_view)
+            await interaction.response.send_message(content="Please select the winning team", view=new_view, ephemeral=True)
     
     @button(label='Cancel', style=discord.ButtonStyle.danger, custom_id="cancel_match_button")
     async def cancel_match(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -647,7 +647,7 @@ class ScoringView(discord.ui.View):
             for player in self.matching_embed.match.players:
                 del get_players_in_game()[player.name]
             del get_games_running()[self.matching_embed.match.id]
-            await interaction.response.send_message(content="<@" + str(interaction.user.id)+'> cancelled the match!', view=self)
+            await interaction.response.send_message(content="<@" + str(interaction.user.id)+'> cancelled the match!', view=self, ephemeral=True)
 
 
 class TeamScoreView(discord.ui.View):
@@ -733,7 +733,7 @@ class TeamScoreView(discord.ui.View):
             await interaction.response.edit_message(content="You cancelled the scoring session!", view=self)
 
 
-def TopKillersView(match: Match, players: dict, scoring_data: dict, score_view: ScoringView, interaction: discord.Interaction, killer: int = 1) -> discord.ui.View:
+def TopKillersView(match: Match, players: dict, scoring_data: dict, score_view: ScoringView, func_interaction: discord.Interaction, killer: int = 1) -> discord.ui.View:
     options = [discord.SelectOption(label=player.name, value=player.id) for player in players]
 
     class _TopKillersView(discord.ui.View):
@@ -786,7 +786,7 @@ def TopKillersView(match: Match, players: dict, scoring_data: dict, score_view: 
                 self.clear_items()
                 if len(self.scoring_data["Top Killers"]) == 3 or \
                 (self.match.get_max_players() == 2 and len(self.scoring_data["Top Killers"]) == 2):
-                    await interaction.response.edit_message(content="All users of this match have been scored!", view=self)
+                    await interaction.response.edit_message(content=f"All users of match ID {str(self.match.get_id())} have been scored by <@{interaction.user.id}>!", view=self)
                     del _games_running[self.matching_embed.match.id]  # Delete the game from the running games.
                 else:
                     new_view = TopKillersView(self.match, players, self.scoring_data, self.score_view, self.interaction, killer=killer + 1)
@@ -806,7 +806,7 @@ def TopKillersView(match: Match, players: dict, scoring_data: dict, score_view: 
                 self.score_view.has_interacted_with = False
                 await interaction.response.edit_message(content="You cancelled the scoring session!", view=self)
 
-    return _TopKillersView(match, players, scoring_data, score_view, interaction)
+    return _TopKillersView(match, players, scoring_data, score_view, func_interaction)
             
 
 ## FUNCTIONS
