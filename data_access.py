@@ -436,6 +436,8 @@ class JoinGame(discord.ui.View):
                     new_view = ScoringView(self.matching_embed.match, interaction.user, self.matching_embed.match.get_teams())
                     # new_view = MatchMakeView(self.matching_embed.match, captains[0].id, interaction.user, teams_so_far, remaining_players)
                     await interaction.response.edit_message(content='The game is ready! Please send a screenshot of the game showing the winners and top killers once the game has ended.', embed=new_embed.get_embed(), view=new_view) # view=new_view
+                    for player in self.matching_embed.match.get_players():  # Their game may be done before it gets scored, so might as well let them create a new one.
+                        del _players_in_game[player.name]
                 else:
                     print("here")
                     remaining_players, teams_so_far = matchmake(self.matching_embed.match)
@@ -528,8 +530,6 @@ class SetupELORoles(discord.ui.View):
 def MatchMakeView(match: Match, captain_choosing: int, user: discord.User, teams: dict[str, list[discord.User]], players_remaining: list[discord.User]) -> discord.ui.View:
     """Return a MatchMakeView."""
     options_list = [discord.SelectOption(label=player.name, value=player.id) for player in players_remaining]
-    print("HIIII")
-    print(options_list)
 
     # Test options list: [discord.SelectOption(label="hi",value="hii")]
 
@@ -604,9 +604,10 @@ def MatchMakeView(match: Match, captain_choosing: int, user: discord.User, teams
                     self.clear_items()
                     print([player.name for player in self.match.teams["Team One"]])
                     print([player.name for player in self.match.teams["Team Two"]])
-                    await interaction.response.edit_message(content="The game is now ready! Please send a screenshot of the game showing the winners and top killers once the game has ended.", view=new_view, embed=teams_embed.get_embed())
-                    for player in self.match.players:  # Their game may be done before it gets scored, so might as well let them create a new one.
+                    for player in self.match.get_players():  # Their game may be done before it gets scored, so might as well let them create a new one.
                         del _players_in_game[player.name]
+
+                    await interaction.response.edit_message(content="The game is now ready! Please send a screenshot of the game showing the winners and top killers once the game has ended.", view=new_view, embed=teams_embed.get_embed())
                     return
 
                 teams_embed = TeamMakeEmbed(self.match)
