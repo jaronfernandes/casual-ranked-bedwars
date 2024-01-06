@@ -68,13 +68,15 @@ class Owner(commands.Cog):
                 return
             else:
                 self.has_interacted = True
+
+                await interaction.response.defer()
                 
                 successful_clear = clear_data()
                 
                 if successful_clear:
-                    await interaction.response.send_message("Successfully cleared all data!", ephemeral=True)
+                    await interaction.followup.send(content="Successfully cleared all data!", ephemeral=True)
                 else:
-                    await interaction.response.send_message("There was an error clearing data!\nPlease check the console for more information.", ephemeral=True)
+                    await interaction.followup.send(content="There was an error clearing data!\nPlease check the console for more information.", ephemeral=True)
 
         @discord.ui.button(label="Cancel", style=discord.ButtonStyle.danger)
         async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
