@@ -411,7 +411,7 @@ class JoinGame(discord.ui.View):
         if self.has_interacted_with:
             await interaction.response.send_message('This message has expired!', ephemeral=True)
             return
-        
+                
         if interaction.user.id == self.matching_embed.get_host().id:
             await interaction.response.send_message('You can\'t join your own match!', ephemeral=True)
         elif interaction.user in self.matching_embed.match.players:
@@ -419,9 +419,9 @@ class JoinGame(discord.ui.View):
         elif interaction.user.name in _players_in_game:
             await interaction.response.send_message('You are already in a match!', ephemeral=True)
         else:
-            _players_in_game[interaction.user.name] = True
             self.matching_embed.match.add_player(interaction.user, int(get_player_data_from_json_file(interaction.user, interaction.guild.id)["ELO"]))
             self.matching_embed = MatchMakeEmbed(self.matching_embed.match)
+
             if self.matching_embed.match.is_full():
                 self.clear_items()
                 self.has_interacted_with = True
@@ -439,7 +439,6 @@ class JoinGame(discord.ui.View):
                     for player in self.matching_embed.match.get_players():  # Their game may be done before it gets scored, so might as well let them create a new one.
                         del _players_in_game[player.name]
                 else:
-                    print("here")
                     remaining_players, teams_so_far = matchmake(self.matching_embed.match)
                     captains = [teams_so_far["Team One"][0], teams_so_far["Team Two"][0]]
                     self.matching_embed.match.set_teams(teams_so_far)
@@ -505,6 +504,7 @@ class SetupELORoles(discord.ui.View):
             return
         
         self.has_interacted_with = True
+        
         self.clear_items()
         await interaction.response.defer()
         # await asyncio.sleep()
@@ -585,7 +585,7 @@ def MatchMakeView(match: Match, captain_choosing: int, user: discord.User, teams
                 self.has_interacted_with = True
 
                 player_chosen = interaction.guild.get_member(int(select.values[0]))
-                print(player_chosen)
+                print(interaction.user.name + " chose " + player_chosen)
                 self.players_remaining.remove(player_chosen)
                 if self.captain_choosing == self.captains[0].id:
                     self.teams["Team One"].append(player_chosen)
@@ -605,8 +605,6 @@ def MatchMakeView(match: Match, captain_choosing: int, user: discord.User, teams
                     teams_embed = TeamMakeEmbed(self.match)
                     new_view = ScoringView(self.match, interaction.user, teams_embed.match.teams)
                     self.clear_items()
-                    print([player.name for player in self.match.teams["Team One"]])
-                    print([player.name for player in self.match.teams["Team Two"]])
                     for player in self.match.get_players():  # Their game may be done before it gets scored, so might as well let them create a new one.
                         del _players_in_game[player.name]
 
@@ -688,8 +686,7 @@ class ScoringView(discord.ui.View):
             self.has_interacted_with = True
 
             self.clear_items()
-            for player in self.matching_embed.match.players:
-                del get_players_in_game()[player.name]
+            # Don't need to remove from players in game since at this point they should already be removed.
             del get_games_running()[self.matching_embed.match.id]
             await interaction.response.send_message(content="<@" + str(interaction.user.id)+'> cancelled the match!', view=self, ephemeral=True)
 
@@ -832,7 +829,7 @@ def TopKillersView(match: Match, players: dict, scoring_data: dict, score_view: 
                 (self.match.get_max_players() == 2 and len(self.scoring_data["Top Killers"]) == 2):
                     successful_scoring = await score_game(self.scoring_data, self.interaction, self.match.get_players())
                     if successful_scoring:
-                        await interaction.response.edit_message(content=f"All users of match ID {str(self.match.get_id())} have been scored by <@{interaction.user.id}>!", view=self)
+                        await interaction.response.send_message(content=f"All users of match ID {str(self.match.get_id())} have been scored by <@{interaction.user.id}>!", view=self, ephemeral=False)
                         del _games_running[self.matching_embed.match.id]  # Delete the game from the running games.
                     else:
                         self.score_view.has_interacted_with = False
@@ -1059,9 +1056,7 @@ def create_match(player, playerscurrent_guild_id: int, is_big_team_map: bool = F
                     map = random.choice(maps)
                 else:
                     map = "Any"
-                    print("The user may manually select their desired map.")
 
-                print(match_id, todays_date, players, map, is_big_team_map)
                 match_object = Match(match_id, todays_date, max_players, players, map, is_big_team_map, player, _players_in_game)
                 _games_running[match_id] = match_object
                 return match_object
@@ -1103,8 +1098,10 @@ def clear_data() -> bool:
         return False
     
 
-def reset_season(guild_id: int) -> bool:
+async def reset_season(guild: discord.Guild) -> bool:
     """Reset the season for a guild."""
+    guild_id = guild.id
+
     try:
         with open("data", "r") as file:
             string = file.read()
@@ -1117,6 +1114,39 @@ def reset_season(guild_id: int) -> bool:
                 "end_date": str(date.today()),
                 "banned_items": data["SERVERS"][str(guild_id)]["current_season"]["banned_items"]
             }
+
+            # Remove the user's current role, and give them the lowest role instead.
+            elo_dict = get_elo_distribution(guild_id)
+            for user_id in data["SERVERS"][str(guild_id)]["user_data"]:
+                try:
+                    user = guild.get_member(int(user_id))
+
+                    if user is None:
+                        print("Note: User has left the server, so they have not had any roles removed. This is simply an acknowledgement, not an error.")
+                        continue
+
+                    lowest_role_id = int(elo_dict[str(sorted([int(key) for key in elo_dict])[0])][4])
+                    lowest_role = guild.get_role(lowest_role_id)
+                    
+                    if lowest_role is None:
+                        print("ERROR: Roles have not been set up. Please run /admin setup-roles to set them up!")
+                        return (False, -1)
+                    else:
+                        await user.add_roles(lowest_role)
+
+                    for key in elo_dict:
+                        if any(int(elo_dict[key][4]) == role.id and role.id != int(lowest_role_id) for role in user.roles):
+                            role = guild.get_role(int(elo_dict[key][4]))
+                            await user.remove_roles(role)
+
+                    # Update the player's data
+                    if guild.owner.id != user.id:  # Otherwise the bot cannot change the nickname of the owner, even with admin perms.
+                        await user.edit(nick=f"{user.name} [0]")
+
+                except Exception as e:  # Possibly due to user leaving or role not existing anymore
+                    print(e) 
+                    print("Error removing role from user.")
+                    return (False, -1)
 
             new_season_number = data["SERVERS"][str(guild_id)]["current_season"]["season"] + 1
 
@@ -1285,7 +1315,9 @@ async def score_game(scoring_data: dict, interaction: discord.Interaction, playe
                 await member.add_roles(interaction.guild.get_role(new_role))
 
             # Update the player's data
-            member.edit(nick=f"{member.nick} [{str(new_elo)}]")
+            if interaction.guild.owner.id != player.id:  # Otherwise the bot cannot change the nickname of the owner, even with admin perms.
+                await member.edit(nick=f"{member.name} [{str(new_elo)}]")
+
             player_data["ELO"] = new_elo
             player_data["Wins"] += 1 if player in scoring_data["Winning Team"] else player_data["Wins"]
             player_data["Losses"] += 1 if player in scoring_data["Losing Team"] else player_data["Losses"]
@@ -1299,9 +1331,12 @@ async def score_game(scoring_data: dict, interaction: discord.Interaction, playe
                 data["SERVERS"][str(guild_id)]["user_data"][str(player.id)] = player_data
                 with open("data", "w") as jsonFile:
                     json.dump(data, jsonFile)
-        except:
+        except Exception as e:
             something_went_wrong = True
-            print(f"Error scoring player {player.name}.")
+            print(e)
+            print(f"Error scoring player {player.name}. Please check the console for more details, \
+                  or make sure the bot has the appropriate permissions as well as the bot having appropriate hierarchy \
+                  in the roles list.")
     
     return not something_went_wrong
     
