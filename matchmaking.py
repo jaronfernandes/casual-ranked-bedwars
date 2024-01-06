@@ -36,7 +36,6 @@ def matchmake(match: Match) -> tuple[list[discord.User], dict[str, list[discord.
             
     elif match.get_randomized_captains():
         # Randomized Captains, but they choose their teams
-        print("HEREEEEEEE")
         for i in range(0, 2):
             rand_index = random.randint(0, len(plr_list) - 1)
             chosen_user = plr_list[rand_index]
@@ -44,14 +43,8 @@ def matchmake(match: Match) -> tuple[list[discord.User], dict[str, list[discord.
             _append_to_team(i, teams, chosen_user)
 
             plr_list.pop(rand_index)
-        
-        print("AAAAA")
-        print(plr_list)
-        print([player.name for player in teams["Team One"]])
-        print([player.name for player in teams["Team Two"]])
     else:
         # Based on highest ELO, returns 
-        print("BRUH")
         for i in range(0, total_players):
             highest_elo = 0
             second_highest_elo = 0
@@ -84,8 +77,6 @@ def matchmake(match: Match) -> tuple[list[discord.User], dict[str, list[discord.
             plr_list.remove(teams["Team One"][0])
             plr_list.remove(teams["Team Two"][0])
 
-    print([player.name for player in teams["Team One"]])
-    print([player.name for player in teams["Team Two"]])
     # Returns a tuple of the remaining players, as well as the teams so far.
     return (plr_list, teams) 
     
