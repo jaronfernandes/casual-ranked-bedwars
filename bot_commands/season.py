@@ -20,11 +20,13 @@ class Season(commands.Cog):
             start_date = chosen_season["start_date"]
             end_date = chosen_season["end_date"]
             banned_items = chosen_season["banned_items"]
+            season_user_data = data["user_data"]
         else:
             chosen_season = data["previous_season_statistics"][str(season)]
             start_date = chosen_season["start_date"]
             end_date = chosen_season["end_date"]
             banned_items = chosen_season["banned_items"]
+            season_user_data = chosen_season["user_data"]
 
         embed = discord.Embed(
             title= current_guild.name + " | Season " + str(season),
@@ -35,10 +37,10 @@ class Season(commands.Cog):
 
         plrs = []
         # get top players based on ELO below
-        for player in data["user_data"]:
+        for player in season_user_data:
             plrs.append({
                 "ID": player,
-                "ELO": data["user_data"][player]["ELO"]
+                "ELO": season_user_data[player]["ELO"]
                 })
         top_players = sorted(plrs, key=lambda k: k["ELO"], reverse=True)[:10]
 
