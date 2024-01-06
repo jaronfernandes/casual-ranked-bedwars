@@ -102,7 +102,7 @@ class RandomizeCaptains(discord.ui.View):
 
         self.clear_items()
         del _players_in_game[interaction.user.name]
-        await interaction.response.send_message(content='You canceled the match!', view=self)
+        await interaction.response.send_message(content='You canceled the match!', view=self, ephemeral=True)
     
 class RandomizeTeams(discord.ui.View):
     match: Match
@@ -166,7 +166,7 @@ class RandomizeTeams(discord.ui.View):
 
         self.clear_items()
         del _players_in_game[interaction.user.name]
-        await interaction.response.send_message(content='You canceled the match!', view=self)
+        await interaction.response.send_message(content='You canceled the match!', view=self, ephemeral=True)
 
 class RandomizeMap(discord.ui.View):
     has_interacted_with: bool
@@ -234,7 +234,7 @@ class RandomizeMap(discord.ui.View):
         
         self.clear_items()
         del _players_in_game[interaction.user.name]
-        await interaction.response.send_message(content='You canceled the match!', view=self)
+        await interaction.response.send_message(content='You canceled the match!', view=self, ephemeral=True)
 
 
 class UsingSmallerMaps(discord.ui.View):
@@ -499,6 +499,9 @@ class SetupELORoles(discord.ui.View):
     async def randomize_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button):
         if self.has_interacted_with:
             await interaction.response.send_message('This message has expired!', ephemeral=True)
+            return
+        elif not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message('You are not an admin!', ephemeral=True)
             return
         
         self.has_interacted_with = True
@@ -1258,7 +1261,7 @@ async def score_game(scoring_data: dict, interaction: discord.Interaction, playe
         if elo_dict[elo_key][4] == "N/A" or all(elo_dict[elo_key][4] != str(role.id) for role in interaction.guild.roles):
             # Admin by default.
             new_view = SetupELORoles()
-            await interaction.response.send_message(content="It seems the roles for the ELO distribution have not been set up yet. Would you like to set them up now?\n__**Note:**__ It will say there was an error; don't worry. You will have to rescore the match. ", ephemeral=True, mention_author=True, view=new_view)
+            await interaction.channel.send(content="It seems the roles for the ELO distribution have not been set up yet. Would you like to set them up now?\n__**Note:**__ It will say there was an error; don't worry. You will have to rescore the match. ", mention_author=True, view=new_view)
             return False
     
     new_player_elos = scoring_algorithm(guild_id, scoring_data, players, elo_dict, interaction)
