@@ -1,11 +1,12 @@
 # **casual-ranked-bedwars bot**
 ```python
 developer = "Jaron Fernandes"
+contributors = []
 github = "https://github.com/jaronfernandes"
 ```
 # **IMPORTANT NOTE:** 
+This README is beind revamped at the moment; however, the rest of the project is functional. If you encounter any bugs, please submit a new issue.
 
-This bot is currently being revamped! It will come with many new features on top of the existing ones: 
 - Slash Commands (these didn't exist when I created the bot)
 - Enhanced Data Storage (so you'll save braincells by not viewing my code)
 - Custom Match Settings for Individual Servers (different tastes, different games!)
@@ -14,13 +15,16 @@ This bot is currently being revamped! It will come with many new features on top
 
 # Description
 
-A (formerly) fully functional Casual Ranked Bedwars Discord bot I made for my friends in a small Discord server. Decided to upload it to Github two and a half years later because why not?
+A fully functional Casual Ranked Bedwars Discord bot I made for my friends in a small Discord server. Decided to upload it to Github two and a half years later because why not?
 
-Created (and finished) in January 2021, it has been subjected to severe deprecation due to Discord updates as it was originally built for some Discord.js version 12. My inactivity on casual ranked bedwars subsequently led to the project not being supported anymore. Due to these unforeseen updates, expect some features to not work.
+Initially created in January 2021 using discord.js, but migrated to discord.py in December-January 2023 after severe deprecation from Discord updates.
 
-This bot is meant for small servers. It takes advantage of Discord's messaging system by using a message the bot sends, and manipulates it to hold its own little database of player statistics. You will have to modify this system to accomodate more players or use an external database.
+This bot is meant for small servers as it uses a volatile file saving system that is stored on your computer.
 
-Feel free to edit the array of maps and the other settings to whatever is up-to-date or to your liking.
+# Setup
+
+- Change .env.example to .env, and assign your Discord bot token to TOKEN.
+- Feel free to edit *some* of the contents of files such as maps or elo-distribution.
 
 # Requirements:
 - discord, dotenv, python (preferably 3.6+)
