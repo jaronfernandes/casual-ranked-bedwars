@@ -4,16 +4,14 @@ developer = "Jaron Fernandes"
 contributors = []
 github = "https://github.com/jaronfernandes"
 ```
-# **IMPORTANT NOTE:** 
-This README is beind revamped at the moment; however, the rest of the project is functional. If you encounter any bugs, please submit a new issue.
-
 
 # Features 
-- Slash and Prefix Commands
-- Enhanced Data Storage (so you'll save *some* braincells by not viewing my code)
-- User + Season Statistics and Leaderboards (settling the GOAT debate of casual ranked bedwars)
-- Assisted Scoring (saves you from visiting the elo distribution file)
-- Role and Channel Setup Commands (to make your life easier!)
+- **Slash and Prefix Commands**
+- **File Data Storage** (stored on your computer so you can ~~modify~~ view user data)
+- **User + Season Statistics and Leaderboards** (settling the GOAT debate of casual ranked bedwars)
+- **Assisted Scoring** (saves you from visiting the elo distribution file)
+- **Independent Server Data** (let the bot thrive in multiple guilds, since why not?)
+- **Role and Channel Setup Commands** (to make your life easier!)
 
 
 # Description
