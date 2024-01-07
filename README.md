@@ -5,6 +5,7 @@ contributors = []
 github = "https://github.com/jaronfernandes"
 ```
 
+
 # Features 
 - **Slash and Prefix Commands**
 - **File Data Storage** (stored on your computer so you can ~~modify~~ view user data)
