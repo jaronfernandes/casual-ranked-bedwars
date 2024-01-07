@@ -48,7 +48,7 @@ If you are a macOS user, navigate to the Applications/Python 3.11/ (or a differe
 | **stats** | [`username`] | Get your current or another user's season statistics |
 | **season** | [`season #`] | View the statistics for the current or a past season |
 | **rules** | | View the rules and instructions for Casual Ranked Bedwars |
-| **info** | | View the current elo distribution for Casual Ranked Bedwars. |
+| **info** | | View the current elo distribution for Casual Ranked Bedwars |
 | **maps** | | View the maps currently in rotation |
 | **leaderboard** | [`ELO, Wins, W/L Ratio, Winstreak`] [`page #`] | View the leaderboard for several statistics |
 | **admin** | [`cmd`] | All admin commands (default displays a list of admin commands) |
