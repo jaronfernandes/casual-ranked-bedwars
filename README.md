@@ -52,4 +52,4 @@ If you are a macOS user, navigate to the Applications/Python 3.11/ (or a differe
 | **maps** | | View the maps currently in rotation |
 | **leaderboard** | [`ELO, Wins, W/L Ratio, Winstreak`] [`page #`] | View the leaderboard for several statistics |
 | **admin** | [`cmd`] | All admin commands (default displays a list of admin commands) |
-| **owner** | [`cmd`] | All owner commands (default displays a list of owner commands) |
+| **owner** | [`cmd`] | All *bot* owner commands (default displays a list of bot owner commands) |
