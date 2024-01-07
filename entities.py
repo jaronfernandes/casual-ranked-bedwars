@@ -30,7 +30,7 @@ class Match:
     players: dict[discord.User: int]
     teams: dict[str: list[discord.User]]
     map: str
-    players_in_game: dict[discord.User: bool]
+    players_in_game: dict[str: bool]
     is_big_team_map: bool
     is_ready: bool
     is_randomized_teams: bool
@@ -91,7 +91,7 @@ class Match:
         
         Preconditions: player not in self.players
         """
-        self.players_in_game[player] = True
+        self.players_in_game[player.name] = True
         self.players[player] = player_elo
 
     def remove_player(self, player: discord.User) -> None:
@@ -99,7 +99,7 @@ class Match:
         
         Preconditions: player in self.players
         """
-        del self.players_in_game[player]
+        del self.players_in_game[player.name]
         del self.players[player]
 
     def is_full(self) -> bool:
@@ -153,7 +153,6 @@ class MatchMakeEmbed():
             file = discord.File("map_images/"+match.map+".png", filename=match.map+".png")
             self.embed.set_image(url="attachment://" + file.filename)
             self.img_file = file
-            print('embed set')
         except:
             print("No image found for map "+match.map+", using default instead.")
             file = discord.File("map_images/hypixel.png", filename="hypixel.png")
@@ -220,7 +219,6 @@ class TeamMakeEmbed():
             file = discord.File("map_images/"+match.map+".png", filename=match.map+".png")
             self.embed.set_image(url="attachment://" + file.filename)
             self.img_file = file
-            print('embed set')
         except:
             print("No image found for map "+match.map+", using default instead.")
             file = discord.File("map_images/hypixel.png", filename="hypixel.png")

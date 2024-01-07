@@ -2,7 +2,7 @@ import discord, os
 from discord import app_commands
 from discord.ext import commands
 from datetime import date
-from data_access import reset_season
+from data_access import reset_season, SetupELORoles, get_elo_distribution
 
 class Admin(commands.Cog):
     def __init__(self, bot):
@@ -28,13 +28,15 @@ class Admin(commands.Cog):
                 return
             else:
                 self.has_interacted = True
+
+                await interaction.response.defer()
                 
-                successful_reset, season = reset_season(interaction.user.guild.id)
+                successful_reset, season = await reset_season(interaction.user.guild)
                 
                 if successful_reset:
-                    await interaction.response.send_message("Successfully updated to season " + str(season) + "!", ephemeral=True)
+                    await interaction.followup.send(content="Successfully updated to season " + str(season) + "!", ephemeral=True)
                 else:
-                    await interaction.response.send_message("There was an error setting the new season!\nPlease check the console for more information.", ephemeral=True)
+                    await interaction.followup.send(content="There was an error setting the new season!\nPlease check the console for more information.", ephemeral=True)
 
         @discord.ui.button(label="Cancel", style=discord.ButtonStyle.danger)
         async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -57,6 +59,17 @@ class Admin(commands.Cog):
             await ctx.reply(content="You do not have the permission to do this!", mention_author=True, ephemeral=True)
         elif option != None and option.lower() == 'reset-season':
             await ctx.reply(content="Are you sure you want to end this season and start a new one?", view=self.SeasonUpdateView(ctx), mention_author=True, ephemeral=True)
+        elif option != None and option.lower() == 'setup-roles':
+            elo_dict = get_elo_distribution(ctx.guild.id)
+
+            for elo_key in elo_dict:  # Check if the roles exist
+                if elo_dict[elo_key][4] == "N/A" or all(elo_dict[elo_key][4] != str(role.id) for role in ctx.guild.roles):
+                    new_view = SetupELORoles()
+                    await ctx.reply(content="It seems the roles for the ELO distribution have not been set up yet. Would you like to set them up now?", mention_author=True, view=new_view, ephemeral=True)
+                    return
+            
+            await ctx.reply(content="The roles for the ELO distribution have already been set up!", mention_author=True, ephemeral=True)
+        
         elif option != None and not option.lower() == 'help':
             await ctx.reply(content="Invalid admin command! Please use /admin or /admin help to view the list of admin commands, or use /admin [command] to execute an admin command.", mention_author=True, ephemeral=True)
         else:  # No option specified
@@ -68,7 +81,7 @@ class Admin(commands.Cog):
             )   
 
             help_embed.add_field(name="help", value="View all the admin-only commands", inline=False)
-            help_embed.add_field(name="score", value="Score a game", inline=False)
+            help_embed.add_field(name="setup-roles", value="Setup prestige roles, if they are not already set up", inline=False)
             help_embed.add_field(name="reset-season", value="Reset the season to a new one", inline=False)
 
             try:
