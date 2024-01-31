@@ -18,7 +18,7 @@ github = "https://github.com/jaronfernandes"
 
 A fully functional Casual Ranked Bedwars Discord bot I made for my friends in a small Discord server. Decided to upload it to Github two and a half years later because why not?
 
-Initially created in January 2021 using discord.js, it migrated to discord.py in December-January 2023 after severe deprecation from Discord updates.
+Initially created in January 2021 using discord.js, it fully migrated to discord.py in January 2024 after severe deprecation from Discord updates.
 
 This bot is meant for small servers as it uses a volatile file saving system that is stored on your computer.
 
